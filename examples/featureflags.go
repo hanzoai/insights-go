@@ -5,7 +5,7 @@ import (
 	"time"
 
 	json "github.com/goccy/go-json"
-	"github.com/posthog/posthog-go"
+	"github.com/hanzoai/insights-go"
 )
 
 func TestIsFeatureEnabled(projectAPIKey, personalAPIKey, endpoint string) {
