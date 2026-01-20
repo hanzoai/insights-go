@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/posthog/posthog-go"
+	"github.com/hanzoai/insights-go"
 	"log/slog"
 	"os"
 	"time"

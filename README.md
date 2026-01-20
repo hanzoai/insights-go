@@ -1,6 +1,6 @@
 # PostHog Go
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/posthog/posthog-go.svg)](https://pkg.go.dev/github.com/posthog/posthog-go)
+[![Go Reference](https://pkg.go.dev/badge/github.com/hanzoai/insights-go.svg)](https://pkg.go.dev/github.com/hanzoai/insights-go)
 ![min. Go Version](https://img.shields.io/github/go-mod/go-version/PostHog/posthog-go?label=min.%20Go%20version%20)
 
 Please see the main [PostHog docs](https://posthog.com/docs). See the [Go SDK Docs](https://posthog.com/docs/libraries/go).
@@ -10,7 +10,7 @@ Please see the main [PostHog docs](https://posthog.com/docs). See the [Go SDK Do
 Install posthog to your gopath
 
 ```bash
-$ go get github.com/posthog/posthog-go
+$ go get github.com/hanzoai/insights-go
 ```
 
 Go 🦔!
@@ -20,7 +20,7 @@ package main
 
 import (
     "os"
-    "github.com/posthog/posthog-go"
+    "github.com/hanzoai/insights-go"
 )
 
 func main() {
@@ -136,11 +136,11 @@ module example/posthog-go-app
 
 go 1.22.5
 
-require github.com/posthog/posthog-go v0.0.0-20240327112532-87b23fe11103
+require github.com/hanzoai/insights-go v0.0.0-20240327112532-87b23fe11103
 
 require github.com/google/uuid v1.3.0 // indirect
 
-replace github.com/posthog/posthog-go => /path-to-your-local/posthog-go
+replace github.com/hanzoai/insights-go => /path-to-your-local/posthog-go
 ```
 
 ## Examples

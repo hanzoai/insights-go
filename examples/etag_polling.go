@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/posthog/posthog-go"
+	"github.com/hanzoai/insights-go"
 )
 
 const etagPollInterval = 5 * time.Second
