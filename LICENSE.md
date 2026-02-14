@@ -1,6 +1,7 @@
 The MIT License (MIT)
 
-Copyright (c) 2020 PostHog (part of Hiberly Inc)
+Copyright (c) 2020 Hanzo AI Inc
+Originally based on posthog-go by PostHog.
 
 Copyright (c) 2016 Segment, Inc.
 
