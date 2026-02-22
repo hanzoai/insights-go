@@ -2,18 +2,21 @@ package posthog
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	json "github.com/goccy/go-json"
-	"github.com/hashicorp/golang-lru/v2"
+	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 const (
@@ -62,7 +65,15 @@ type Client interface {
 	// if the given flag is on or off for the user
 	GetFeatureFlag(FeatureFlagPayload) (interface{}, error)
 
+	// GetFeatureFlagResult returns the flag value and payload together.
+	// Use this instead of calling GetFeatureFlag and GetFeatureFlagPayload separately.
+	// Returns an error if the flag cannot be evaluated (e.g., flag missing or cannot be computed
+	// when using OnlyEvaluateLocally).
+	GetFeatureFlagResult(FeatureFlagPayload) (*FeatureFlagResult, error)
+
 	// GetFeatureFlagPayload returns feature flag's payload value matching key for user (supports multivariate flags).
+	// Deprecated: Use GetFeatureFlagResult instead, which returns both
+	// the flag value and payload while properly tracking feature flag usage.
 	GetFeatureFlagPayload(FeatureFlagPayload) (string, error)
 
 	// GetRemoteConfigPayload returns decrypted feature flag payload value for remote config flags.
@@ -153,6 +164,7 @@ type client struct {
 type flagUser struct {
 	distinctID string
 	flagKey    string
+	deviceID   string
 }
 
 // Instantiate a new client that uses the write key passed as first argument to
@@ -309,6 +321,7 @@ func (c *client) Enqueue(msg Message) (err error) {
 	switch m := msg.(type) {
 	case Alias:
 		m.Type = "alias"
+		m.Uuid = makeUUID(m.Uuid)
 		m.Timestamp = makeTimestamp(m.Timestamp, ts)
 		m.DisableGeoIP = c.GetDisableGeoIP()
 		data, apiMsg, serErr := prepareForSend(m)
@@ -321,6 +334,7 @@ func (c *client) Enqueue(msg Message) (err error) {
 
 	case Identify:
 		m.Type = "identify"
+		m.Uuid = makeUUID(m.Uuid)
 		m.Timestamp = makeTimestamp(m.Timestamp, ts)
 		m.DisableGeoIP = c.GetDisableGeoIP()
 		data, apiMsg, serErr := prepareForSend(m)
@@ -332,6 +346,7 @@ func (c *client) Enqueue(msg Message) (err error) {
 		return
 
 	case GroupIdentify:
+		m.Uuid = makeUUID(m.Uuid)
 		m.Timestamp = makeTimestamp(m.Timestamp, ts)
 		m.DisableGeoIP = c.GetDisableGeoIP()
 		data, apiMsg, serErr := prepareForSend(m)
@@ -344,6 +359,7 @@ func (c *client) Enqueue(msg Message) (err error) {
 
 	case Capture:
 		m.Type = "capture"
+		m.Uuid = makeUUID(m.Uuid)
 		m.Timestamp = makeTimestamp(m.Timestamp, ts)
 		if m.shouldSendFeatureFlags() {
 			// Add all feature variants to event
@@ -397,6 +413,7 @@ func (c *client) Enqueue(msg Message) (err error) {
 
 	case Exception:
 		m.Type = "exception"
+		m.Uuid = makeUUID(m.Uuid)
 		m.Timestamp = makeTimestamp(m.Timestamp, ts)
 		m.DisableGeoIP = c.GetDisableGeoIP()
 		data, apiMsg, serErr := prepareForSend(m)
@@ -437,96 +454,129 @@ func (c *client) ReloadFeatureFlags() error {
 }
 
 func (c *client) GetFeatureFlagPayload(flagConfig FeatureFlagPayload) (string, error) {
-	if err := flagConfig.validate(); err != nil {
+	// Non-standard: This method historically left `SendFeatureFlagEvents` as nil.
+	// Once `flagConfig.validate()` is called, it sets it to true by default.
+	//
+	// To preserve historical behavior, we do not coerce to false, deviating from
+	// other SDKs that _do not_ send events from getFeatureFlagPayload calls.
+	result, err := c.GetFeatureFlagResult(flagConfig)
+	if err != nil {
+		if errors.Is(err, ErrFlagNotFound) {
+			return "", nil
+		}
 		return "", err
 	}
-
-	var payload string
-	var err error
-
-	if c.featureFlagsPoller != nil {
-		// get feature flag from the poller, which uses the personal api key
-		// this is only available when using a PersonalApiKey
-		payload, err = c.featureFlagsPoller.GetFeatureFlagPayload(flagConfig)
-	} else {
-		// if there's no poller, get the feature flag from the flags endpoint
-		c.debugf("getting feature flag from flags endpoint")
-		payload, err = c.getFeatureFlagPayloadFromRemote(flagConfig.Key, flagConfig.DistinctId, flagConfig.Groups, flagConfig.PersonProperties, flagConfig.GroupProperties)
+	if result.RawPayload == nil {
+		return "", nil
 	}
-
-	return payload, err
+	return *result.RawPayload, nil
 }
 
 func (c *client) GetFeatureFlag(flagConfig FeatureFlagPayload) (interface{}, error) {
-	return c.getFeatureFlagWithContext(context.Background(), flagConfig)
+	result, err := c.GetFeatureFlagResult(flagConfig)
+	if err != nil {
+		if errors.Is(err, ErrFlagNotFound) {
+			return false, nil
+		}
+		return nil, err
+	}
+	if result.Variant != nil {
+		return *result.Variant, nil
+	}
+	return result.Enabled, nil
 }
 
-// getFeatureFlagWithContext returns variant value if multivariant flag or otherwise a boolean
-// indicating if the given flag is on or off for the user.
-// The context can be used to control timeouts and cancellation.
-func (c *client) getFeatureFlagWithContext(ctx context.Context, flagConfig FeatureFlagPayload) (interface{}, error) {
+func (c *client) GetFeatureFlagResult(flagConfig FeatureFlagPayload) (*FeatureFlagResult, error) {
+	return c.getFeatureFlagResultWithContext(context.Background(), flagConfig)
+}
+
+func (c *client) getFeatureFlagResultWithContext(ctx context.Context, flagConfig FeatureFlagPayload) (*FeatureFlagResult, error) {
 	// Check context before starting
 	if err := ctx.Err(); err != nil {
-		return false, err
+		return nil, err
 	}
 
 	if err := flagConfig.validate(); err != nil {
-		return false, err
+		return nil, err
 	}
 
 	var flagValue interface{}
+	var payload *string
+	var variant *string
 	var err error
-	var flagResult *FeatureFlagResult
+	var evalResult *featureFlagEvaluationResult
 
 	if c.featureFlagsPoller != nil {
 		// get feature flag from the poller, which uses the personal api key
 		// this is only available when using a PersonalApiKey
 		flagValue, err = c.featureFlagsPoller.GetFeatureFlag(flagConfig)
-		flagResult = &FeatureFlagResult{
+		evalResult = &featureFlagEvaluationResult{
 			Value: flagValue,
 			Err:   err,
+		}
+		if err == nil {
+			payloadStr, _ := c.featureFlagsPoller.GetFeatureFlagPayload(flagConfig)
+			if payloadStr != "" {
+				payload = &payloadStr
+			}
+		}
+		if v, ok := flagValue.(string); ok {
+			variant = &v
 		}
 	} else {
 		// if there's no poller, get the feature flag from the flags endpoint
 		c.debugf("getting feature flag from flags endpoint")
-		flagResult = c.getFeatureFlagFromRemote(flagConfig.Key, flagConfig.DistinctId, flagConfig.Groups,
+		evalResult = c.getFeatureFlagFromRemote(flagConfig.Key, flagConfig.DistinctId, flagConfig.DeviceId, flagConfig.Groups,
 			flagConfig.PersonProperties, flagConfig.GroupProperties)
-		flagValue = flagResult.Value
-		err = flagResult.Err
+		flagValue = evalResult.Value
+		err = evalResult.Err
 		if f, ok := flagValue.(FlagDetail); ok {
 			flagValue = f.GetValue()
-			flagResult.Value = flagValue
+			evalResult.Value = flagValue
+			payloadStr := rawMessageToString(f.Metadata.Payload)
+			if payloadStr != "" {
+				payload = &payloadStr
+			}
+			variant = f.Variant
 		}
 	}
 
 	// Check context after flag evaluation
 	if ctx.Err() != nil {
-		return false, ctx.Err()
+		return nil, ctx.Err()
 	}
 
-	cacheKey := flagUser{flagConfig.DistinctId, flagConfig.Key}
+	deviceID := ""
+	if flagConfig.DeviceId != nil {
+		deviceID = *flagConfig.DeviceId
+	}
+	cacheKey := flagUser{flagConfig.DistinctId, flagConfig.Key, deviceID}
 	if *flagConfig.SendFeatureFlagEvents && !c.distinctIdsFeatureFlagsReported.Contains(cacheKey) {
 		var properties = NewProperties().
 			Set("$feature_flag", flagConfig.Key).
 			Set("$feature_flag_response", flagValue)
 
-		if flagResult.RequestID != nil {
-			properties.Set("$feature_flag_request_id", *flagResult.RequestID)
+		if flagConfig.DeviceId != nil {
+			properties.Set("$device_id", *flagConfig.DeviceId)
 		}
 
-		if flagResult.EvaluatedAt != nil {
-			properties.Set("$feature_flag_evaluated_at", *flagResult.EvaluatedAt)
+		if evalResult.RequestID != nil {
+			properties.Set("$feature_flag_request_id", *evalResult.RequestID)
 		}
 
-		if flagResult.FlagDetail != nil {
-			properties.Set("$feature_flag_version", flagResult.FlagDetail.Metadata.Version)
-			properties.Set("$feature_flag_id", flagResult.FlagDetail.Metadata.ID)
-			if flagResult.FlagDetail.Reason != nil {
-				properties.Set("$feature_flag_reason", flagResult.FlagDetail.Reason.Description)
+		if evalResult.EvaluatedAt != nil {
+			properties.Set("$feature_flag_evaluated_at", *evalResult.EvaluatedAt)
+		}
+
+		if evalResult.FlagDetail != nil {
+			properties.Set("$feature_flag_version", evalResult.FlagDetail.Metadata.Version)
+			properties.Set("$feature_flag_id", evalResult.FlagDetail.Metadata.ID)
+			if evalResult.FlagDetail.Reason != nil {
+				properties.Set("$feature_flag_reason", evalResult.FlagDetail.Reason.Description)
 			}
 		}
 
-		errorString := flagResult.GetErrorString()
+		errorString := evalResult.GetErrorString()
 		if errorString != "" {
 			properties.Set("$feature_flag_error", errorString)
 		}
@@ -541,7 +591,30 @@ func (c *client) getFeatureFlagWithContext(ctx context.Context, flagConfig Featu
 		}
 	}
 
-	return flagValue, err
+	if flagValue == nil {
+		if evalResult.Err != nil {
+			return nil, evalResult.Err
+		}
+		if evalResult.FlagFailed {
+			return nil, fmt.Errorf("%w: '%s' failed to evaluate due to a transient error", ErrFlagNotFound, flagConfig.Key)
+		}
+		return nil, fmt.Errorf("%w: '%s' does not exist or is disabled", ErrFlagNotFound, flagConfig.Key)
+	}
+
+	enabled := false
+	switch v := flagValue.(type) {
+	case bool:
+		enabled = v
+	case string:
+		enabled = v != ""
+	}
+
+	return &FeatureFlagResult{
+		Key:        flagConfig.Key,
+		Enabled:    enabled,
+		RawPayload: payload,
+		Variant:    variant,
+	}, err
 }
 
 func (c *client) GetRemoteConfigPayload(flagKey string) (string, error) {
@@ -591,7 +664,7 @@ func (c *client) getAllFlagsWithContext(ctx context.Context, flagConfig FeatureF
 	} else {
 		// if there's no poller, get the feature flags from the flags endpoint
 		c.debugf("getting all feature flags from flags endpoint")
-		flagsValue, err = c.getAllFeatureFlagsFromRemote(flagConfig.DistinctId, flagConfig.Groups,
+		flagsValue, err = c.getAllFeatureFlagsFromRemote(flagConfig.DistinctId, flagConfig.DeviceId, flagConfig.Groups,
 			flagConfig.PersonProperties, flagConfig.GroupProperties)
 	}
 
@@ -755,6 +828,12 @@ func (c *client) send(pb preparedBatch) {
 			return
 		}
 
+		var httpErr *httpError
+		if errors.As(err, &httpErr) && !isRetryableStatus(httpErr.statusCode) {
+			c.notifyFailure(pb.msgs, err)
+			return
+		}
+
 		// Check if context is cancelled (shutdown timeout exceeded)
 		if c.ctx.Err() != nil {
 			c.Errorf("%d messages dropped: shutdown timeout", len(pb.msgs))
@@ -762,8 +841,13 @@ func (c *client) send(pb preparedBatch) {
 			return
 		}
 
+		retryDelay := c.RetryAfter(i)
+		if httpErr != nil && httpErr.hasRetryAfter && httpErr.retryAfter > retryDelay {
+			retryDelay = httpErr.retryAfter
+		}
+
 		// Wait for retry or shutdown
-		retryTimer := time.NewTimer(c.RetryAfter(i))
+		retryTimer := time.NewTimer(retryDelay)
 		select {
 		case <-retryTimer.C:
 			// continue to next attempt
@@ -791,7 +875,24 @@ func (c *client) send(pb preparedBatch) {
 // Upload serialized batch message.
 func (c *client) upload(ctx context.Context, b []byte) error {
 	url := c.Endpoint + "/batch/"
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(b))
+	body := b
+
+	if c.Compression == CompressionGzip {
+		url += "?compression=gzip"
+		var buf bytes.Buffer
+		gw := gzip.NewWriter(&buf)
+		if _, err := gw.Write(b); err != nil {
+			c.Errorf("gzip compression - %s", err)
+			return fmt.Errorf("gzip compression: %w", err)
+		}
+		if err := gw.Close(); err != nil {
+			c.Errorf("gzip close - %s", err)
+			return fmt.Errorf("gzip close: %w", err)
+		}
+		body = buf.Bytes()
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
 		c.Errorf("creating request - %s", err)
 		return err
@@ -801,7 +902,10 @@ func (c *client) upload(ctx context.Context, b []byte) error {
 
 	req.Header.Add("User-Agent", SDKName+"/"+version)
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Content-Length", fmt.Sprintf("%d", len(b)))
+	req.Header.Add("Content-Length", fmt.Sprintf("%d", len(body)))
+	if c.Compression == CompressionGzip {
+		req.Header.Add("Content-Encoding", "gzip")
+	}
 
 	res, err := c.http.Do(req)
 	if err != nil {
@@ -828,7 +932,60 @@ func (c *client) report(res *http.Response) (err error) {
 	}
 
 	c.Logger.Logf("response %d %s – %s", res.StatusCode, res.Status, string(body))
-	return fmt.Errorf("%d %s", res.StatusCode, res.Status)
+	retryAfter, hasRetryAfter := parseRetryAfter(res.Header.Get("Retry-After"), c.now())
+	return &httpError{
+		statusCode:    res.StatusCode,
+		status:        res.Status,
+		retryAfter:    retryAfter,
+		hasRetryAfter: hasRetryAfter,
+	}
+}
+
+type httpError struct {
+	statusCode    int
+	status        string
+	retryAfter    time.Duration
+	hasRetryAfter bool
+}
+
+func (e *httpError) Error() string {
+	return fmt.Sprintf("%d %s", e.statusCode, e.status)
+}
+
+func isRetryableStatus(statusCode int) bool {
+	if statusCode >= 500 {
+		return true
+	}
+	switch statusCode {
+	case http.StatusRequestTimeout, http.StatusTooManyRequests:
+		return true
+	default:
+		return false
+	}
+}
+
+func parseRetryAfter(value string, now time.Time) (time.Duration, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return 0, false
+	}
+
+	if seconds, err := strconv.Atoi(value); err == nil {
+		if seconds <= 0 {
+			return 0, false
+		}
+		return time.Duration(seconds) * time.Second, true
+	}
+
+	if t, err := http.ParseTime(value); err == nil {
+		delay := t.Sub(now)
+		if delay <= 0 {
+			return 0, false
+		}
+		return delay, true
+	}
+
+	return 0, false
 }
 
 // loop processes messages from the msgs channel, batches them by size,
@@ -975,12 +1132,17 @@ func (c *client) getFeatureVariantsWithOptions(distinctId string, groups Groups,
 		return nil, errors.New(errorMessage)
 	}
 
-	// If OnlyEvaluateLocally is set, only use local evaluation
-	if options != nil && options.OnlyEvaluateLocally {
-		return c.featureFlagsPoller.getFeatureFlagVariantsLocalOnly(distinctId, groups, personProperties, groupProperties)
+	var deviceId *string
+	if options != nil && options.DeviceId != nil {
+		deviceId = options.DeviceId
 	}
 
-	featureVariants, err := c.featureFlagsPoller.getFeatureFlagVariants(distinctId, groups, personProperties, groupProperties)
+	// If OnlyEvaluateLocally is set, only use local evaluation
+	if options != nil && options.OnlyEvaluateLocally {
+		return c.featureFlagsPoller.getFeatureFlagVariantsLocalOnly(distinctId, deviceId, groups, personProperties, groupProperties)
+	}
+
+	featureVariants, err := c.featureFlagsPoller.getFeatureFlagVariants(distinctId, deviceId, groups, personProperties, groupProperties)
 	if err != nil {
 		return nil, err
 	}
@@ -1047,14 +1209,14 @@ func (c *client) isFeatureFlagsQuotaLimited(flagsResponse *FlagsResponse) bool {
 	return false
 }
 
-func (c *client) getFeatureFlagFromRemote(key string, distinctId string, groups Groups, personProperties Properties,
-	groupProperties map[string]Properties) *FeatureFlagResult {
+func (c *client) getFeatureFlagFromRemote(key string, distinctId string, deviceId *string, groups Groups, personProperties Properties,
+	groupProperties map[string]Properties) *featureFlagEvaluationResult {
 
-	result := &FeatureFlagResult{
-		Value: false,
+	result := &featureFlagEvaluationResult{
+		Value: nil,
 	}
 
-	flagsResponse, err := c.decider.makeFlagsRequest(distinctId, groups, personProperties, groupProperties, c.GetDisableGeoIP())
+	flagsResponse, err := c.decider.makeFlagsRequest(distinctId, deviceId, groups, personProperties, groupProperties, c.GetDisableGeoIP())
 
 	if err != nil {
 		result.Err = err
@@ -1075,36 +1237,24 @@ func (c *client) getFeatureFlagFromRemote(key string, distinctId string, groups 
 	}
 
 	if flagDetail, ok := flagsResponse.Flags[key]; ok {
-		result.Value = flagDetail
-		result.FlagDetail = &flagDetail
-		result.FlagMissing = false
+		// If the flag failed evaluation due to a transient server error,
+		// don't return the incorrect enabled=false value
+		if flagDetail.Failed != nil && *flagDetail.Failed {
+			result.FlagFailed = true
+		} else {
+			result.Value = flagDetail
+			result.FlagDetail = &flagDetail
+			result.FlagMissing = false
+		}
 	} else {
-		result.Value = false
 		result.FlagMissing = true
 	}
 
 	return result
 }
 
-func (c *client) getFeatureFlagPayloadFromRemote(key string, distinctId string, groups Groups, personProperties Properties, groupProperties map[string]Properties) (string, error) {
-	flagsResponse, err := c.decider.makeFlagsRequest(distinctId, groups, personProperties, groupProperties, c.GetDisableGeoIP())
-	if err != nil {
-		return "", err
-	}
-
-	if c.isFeatureFlagsQuotaLimited(flagsResponse) {
-		return "", nil
-	}
-
-	if value, ok := flagsResponse.FeatureFlagPayloads[key]; ok {
-		return value, nil
-	}
-
-	return "", nil
-}
-
-func (c *client) getAllFeatureFlagsFromRemote(distinctId string, groups Groups, personProperties Properties, groupProperties map[string]Properties) (map[string]interface{}, error) {
-	flagsResponse, err := c.decider.makeFlagsRequest(distinctId, groups, personProperties, groupProperties, c.GetDisableGeoIP())
+func (c *client) getAllFeatureFlagsFromRemote(distinctId string, deviceId *string, groups Groups, personProperties Properties, groupProperties map[string]Properties) (map[string]interface{}, error) {
+	flagsResponse, err := c.decider.makeFlagsRequest(distinctId, deviceId, groups, personProperties, groupProperties, c.GetDisableGeoIP())
 	if err != nil {
 		return nil, err
 	}
