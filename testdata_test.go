@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"crypto/rand"
@@ -27,7 +27,7 @@ const (
 )
 
 // PropertyCardinalityDistribution defines realistic distribution of property counts
-// Based on typical PostHog usage patterns
+// Based on typical Insights usage patterns
 var PropertyCardinalityDistribution = []struct {
 	Cardinality PropertyCardinality
 	Weight      int // percentage of events with this cardinality
@@ -246,7 +246,7 @@ func randomHex(length int) string {
 	return hex.EncodeToString(bytes)[:length]
 }
 
-// Realistic event names matching PostHog patterns
+// Realistic event names matching Insights patterns
 var realisticEvents = []string{
 	"$pageview", "$autocapture", "$identify", "$pageleave",
 	"user_signed_up", "purchase_completed", "item_added_to_cart",
@@ -257,7 +257,7 @@ var realisticEvents = []string{
 // generateVariedProperties creates realistic property payloads with moderate cardinality
 func generateVariedProperties(seed int) Properties {
 	props := Properties{
-		"$lib":         "posthog-go",
+		"$lib":         "insights-go",
 		"$lib_version": "1.0.0",
 		"session_id":   fmt.Sprintf("sess_%d", seed/100),
 		"page_url":     fmt.Sprintf("https://app.example.com/page/%d", seed%50),
@@ -291,7 +291,7 @@ func generatePropertiesWithCardinality(seed int, cardinality PropertyCardinality
 	}
 
 	props := Properties{
-		"$lib":         "posthog-go",
+		"$lib":         "insights-go",
 		"$lib_version": "1.0.0",
 	}
 

@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"errors"
@@ -21,7 +21,7 @@ type ConfigError struct {
 }
 
 func (e ConfigError) Error() string {
-	return fmt.Sprintf("posthog.NewWithConfig: %s (posthog.Config.%s: %#v)", e.Reason, e.Field, e.Value)
+	return fmt.Sprintf("insights.NewWithConfig: %s (insights.Config.%s: %#v)", e.Reason, e.Field, e.Value)
 }
 
 // Instances of this type are used to represent errors returned when a field was

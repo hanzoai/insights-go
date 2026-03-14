@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"bytes"
@@ -229,7 +229,7 @@ func ExampleCapture() {
 		Event:      "Download",
 		DistinctId: "123456",
 		Properties: Properties{
-			"application": "PostHog Go",
+			"application": "Insights Go",
 			"version":     "1.0.0",
 			"platform":    "macos", // :)
 		},
@@ -244,13 +244,13 @@ func ExampleCapture() {
 	//     {
 	//       "distinct_id": "123456",
 	//       "event": "Download",
-	//       "library": "posthog-go",
+	//       "library": "insights-go",
 	//       "library_version": "1.0.0",
 	//       "properties": {
 	//         "$geoip_disable": true,
-	//         "$lib": "posthog-go",
+	//         "$lib": "insights-go",
 	//         "$lib_version": "1.0.0",
-	//         "application": "PostHog Go",
+	//         "application": "Insights Go",
 	//         "platform": "macos",
 	//         "version": "1.0.0"
 	//       },
@@ -303,7 +303,7 @@ func TestEnqueue(t *testing.T) {
 					Type: "raw",
 					Frames: []StackFrame{
 						{
-							Filename:  "/Users/Developer/posthog-go/examples/main.go",
+							Filename:  "/Users/Developer/insights-go/examples/main.go",
 							LineNo:    56,
 							Function:  "main.main",
 							InApp:     true,
@@ -365,7 +365,7 @@ func TestEnqueue(t *testing.T) {
 				Event:      "Download",
 				DistinctId: "123456",
 				Properties: Properties{
-					"application": "PostHog Go",
+					"application": "Insights Go",
 					"version":     "1.0.0",
 					"platform":    "macos", // :)
 				},
@@ -381,7 +381,7 @@ func TestEnqueue(t *testing.T) {
 				Event:      "Download",
 				DistinctId: "123456",
 				Properties: Properties{
-					"application": "PostHog Go",
+					"application": "Insights Go",
 					"version":     "1.0.0",
 					"platform":    "macos", // :)
 				},
@@ -431,7 +431,7 @@ func TestEnqueue(t *testing.T) {
 				Event:      "Download",
 				DistinctId: "123456",
 				Properties: Properties{
-					"application": "PostHog Go",
+					"application": "Insights Go",
 					"version":     "1.0.0",
 					"platform":    "macos", // :)
 				},
@@ -634,7 +634,7 @@ func TestEnqueuingCustomTypeFails(t *testing.T) {
 	client := New("0123456789")
 	err := client.Enqueue(&customMessage{})
 	require.Error(t, err)
-	require.EqualError(t, err, "messages with custom types cannot be enqueued: *posthog.customMessage",
+	require.EqualError(t, err, "messages with custom types cannot be enqueued: *insights.customMessage",
 		"invalid/missing error when queuing unsupported message")
 }
 
@@ -661,7 +661,7 @@ func TestCaptureWithInterval(t *testing.T) {
 		Event:      "Download",
 		DistinctId: "123456",
 		Properties: Properties{
-			"application": "PostHog Go",
+			"application": "Insights Go",
 			"version":     "1.0.0",
 			"platform":    "macos", // :)
 		},
@@ -698,7 +698,7 @@ func TestCaptureWithTimestamp(t *testing.T) {
 		Event:      "Download",
 		DistinctId: "123456",
 		Properties: Properties{
-			"application": "PostHog Go",
+			"application": "Insights Go",
 			"version":     "1.0.0",
 			"platform":    "macos", // :)
 		},
@@ -732,7 +732,7 @@ func TestCaptureWithDefaultProperties(t *testing.T) {
 		Event:      "Download",
 		DistinctId: "123456",
 		Properties: Properties{
-			"application": "PostHog Go",
+			"application": "Insights Go",
 			"version":     "1.0.0",
 			"platform":    "macos", // :)
 		},
@@ -774,7 +774,7 @@ func TestCaptureMany(t *testing.T) {
 			Event:      "Download",
 			DistinctId: "123456",
 			Properties: Properties{
-				"application": "PostHog Go",
+				"application": "Insights Go",
 				"version":     i,
 			},
 			SendFeatureFlags: SendFeatureFlags(false),
@@ -1465,7 +1465,7 @@ func TestGetFeatureFlagPayloadWithNoPersonalApiKey(t *testing.T) {
 				if r.Header.Get("Content-Type") != "application/json" {
 					t.Errorf("Expected Content-Type: application/json, got %s", r.Header.Get("Content-Type"))
 				}
-				if !strings.HasPrefix(r.Header.Get("User-Agent"), "posthog-go/") {
+				if !strings.HasPrefix(r.Header.Get("User-Agent"), "insights-go/") {
 					t.Errorf("Unexpected User-Agent: %s", r.Header.Get("User-Agent"))
 				}
 
@@ -1691,7 +1691,7 @@ func TestGetFeatureFlagWithNoPersonalApiKey(t *testing.T) {
 				if r.Header.Get("Content-Type") != "application/json" {
 					t.Errorf("Expected Content-Type: application/json, got %s", r.Header.Get("Content-Type"))
 				}
-				if !strings.HasPrefix(r.Header.Get("User-Agent"), "posthog-go/") {
+				if !strings.HasPrefix(r.Header.Get("User-Agent"), "insights-go/") {
 					t.Errorf("Unexpected User-Agent: %s", r.Header.Get("User-Agent"))
 				}
 
@@ -1828,7 +1828,7 @@ func TestGetAllFeatureFlagsWithNoPersonalApiKey(t *testing.T) {
 				if r.Header.Get("Content-Type") != "application/json" {
 					t.Errorf("Expected Content-Type: application/json, got %s", r.Header.Get("Content-Type"))
 				}
-				if !strings.HasPrefix(r.Header.Get("User-Agent"), "posthog-go/") {
+				if !strings.HasPrefix(r.Header.Get("User-Agent"), "insights-go/") {
 					t.Errorf("Unexpected User-Agent: %s", r.Header.Get("User-Agent"))
 				}
 
@@ -2146,7 +2146,7 @@ func TestCaptureSendFlags(t *testing.T) {
 	defer client.Close()
 
 	// Without this call client.Close hangs forever
-	// Ref: https://github.com/PostHog/posthog-go/issues/28
+	// Ref: https://github.com/hanzoai/insights-go/issues/28
 	client.IsFeatureEnabled(
 		FeatureFlagPayload{
 			Key:        "simpleFlag",
@@ -2202,7 +2202,7 @@ func TestCaptureSendFeatureFlagsOptions(t *testing.T) {
 			DistinctId: "test_user",
 			SendFeatureFlags: &SendFeatureFlagsOptions{
 				GroupProperties: map[string]Properties{
-					"company": NewProperties().Set("name", "PostHog"),
+					"company": NewProperties().Set("name", "Hanzo AI"),
 				},
 			},
 		})

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/posthog/posthog-go"
+	insights "github.com/hanzoai/insights-go"
 )
 
 const VERSION = "1.0.0"
@@ -75,8 +75,8 @@ func (t *TrackedTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 // AdapterState tracks SDK state for test assertions
 type AdapterState struct {
 	mu                  sync.Mutex
-	client              posthog.Client
-	config              *posthog.Config
+	client              insights.Client
+	config              *insights.Config
 	totalEventsCaptured int
 	totalEventsSent     int
 	totalRetries        int
@@ -140,8 +140,8 @@ func jsonResponse(w http.ResponseWriter, data interface{}) {
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	response := HealthResponse{
-		SDKName:        "posthog-go",
-		SDKVersion:     posthog.Version,
+		SDKName:        "insights-go",
+		SDKVersion:     insights.Version,
 		AdapterVersion: VERSION,
 	}
 	jsonResponse(w, response)
@@ -171,7 +171,7 @@ func initHandler(w http.ResponseWriter, r *http.Request) {
 	state.pendingEvents = 0
 
 	// Create new client with tracked transport
-	config := posthog.Config{
+	config := insights.Config{
 		Endpoint:  req.Host,
 		Transport: &TrackedTransport{base: http.DefaultTransport, state: state},
 		// Set test-friendly defaults
@@ -191,13 +191,13 @@ func initHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.EnableCompression != nil {
 		if *req.EnableCompression {
-			config.Compression = posthog.CompressionGzip
+			config.Compression = insights.CompressionGzip
 		} else {
-			config.Compression = posthog.CompressionNone
+			config.Compression = insights.CompressionNone
 		}
 	}
 
-	client, err := posthog.NewWithConfig(req.APIKey, config)
+	client, err := insights.NewWithConfig(req.APIKey, config)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -225,7 +225,7 @@ func captureHandler(w http.ResponseWriter, r *http.Request) {
 	state.mu.Unlock()
 
 	// Create capture event
-	capture := posthog.Capture{
+	capture := insights.Capture{
 		DistinctId: req.DistinctID,
 		Event:      req.Event,
 		Properties: req.Properties,
@@ -335,6 +335,6 @@ func main() {
 	http.HandleFunc("/state", stateHandler)
 	http.HandleFunc("/reset", resetHandler)
 
-	log.Printf("Starting PostHog Go SDK adapter on port %s", port)
+	log.Printf("Starting Insights Go SDK adapter on port %s", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

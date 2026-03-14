@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 )
 
 // SlogCaptureHandler wraps a slog.Handler and mirrors qualifying records
-// to PostHog error tracking using client.Enqueue(Exception{...}).
+// to Insights error tracking using client.Enqueue(Exception{...}).
 type SlogCaptureHandler struct {
 	next   slog.Handler
 	client EnqueueClient
@@ -17,11 +17,11 @@ type SlogCaptureHandler struct {
 // NewSlogCaptureHandler creates a new log handler wrapper.
 // You typically wrap your existing handler:
 //
-//	client, err := posthog.NewWithConfig(...)
+//	client, err := insights.NewWithConfig(...)
 //	// error handling and `defer client.Close()` call
 //	base := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
-//	logger := slog.New(posthog.NewSlogCaptureHandler(base, client,
-//	  posthog.WithDistinctIDFn(func(ctx context.Context, r slog.Record) string {
+//	logger := slog.New(insights.NewSlogCaptureHandler(base, client,
+//	  insights.WithDistinctIDFn(func(ctx context.Context, r slog.Record) string {
 //	    return "my-user-id" // or pull from ctx
 //	  }),
 //	))
@@ -49,7 +49,7 @@ func (h *SlogCaptureHandler) Handle(ctx context.Context, r slog.Record) error {
 		err = h.next.Handle(ctx, r)
 	}
 
-	// Then, non-intrusively mirror to PostHog if configured.
+	// Then, non-intrusively mirror to Insights if configured.
 	if h.client == nil || r.Level < h.cfg.minCaptureLevel {
 		return err
 	}

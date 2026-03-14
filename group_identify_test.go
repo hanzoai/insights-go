@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import "testing"
 
@@ -12,7 +12,7 @@ func TestGroupIdentifyMissingType(t *testing.T) {
 		t.Error("invalid error type returned when validating group identify:", err)
 
 	} else if e != (FieldError{
-		Type:  "posthog.GroupIdentify",
+		Type:  "insights.GroupIdentify",
 		Name:  "Type",
 		Value: "",
 	}) {
@@ -30,7 +30,7 @@ func TestGroupIdentifyMissingKey(t *testing.T) {
 		t.Error("invalid error type returned when validating group identify:", err)
 
 	} else if e != (FieldError{
-		Type:  "posthog.GroupIdentify",
+		Type:  "insights.GroupIdentify",
 		Name:  "Key",
 		Value: "",
 	}) {

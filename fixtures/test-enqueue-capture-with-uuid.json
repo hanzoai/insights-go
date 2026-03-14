@@ -4,13 +4,13 @@
     {
       "distinct_id": "123456",
       "event": "Download",
-      "library": "posthog-go",
+      "library": "insights-go",
       "library_version": "1.0.0",
       "properties": {
         "$geoip_disable": true,
-        "$lib": "posthog-go",
+        "$lib": "insights-go",
         "$lib_version": "1.0.0",
-        "application": "PostHog Go",
+        "application": "Insights Go",
         "platform": "macos",
         "version": "1.0.0"
       },

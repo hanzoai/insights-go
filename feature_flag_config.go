@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 type FeatureFlagPayload struct {
 	Key                   string

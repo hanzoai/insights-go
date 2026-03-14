@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import "testing"
 
@@ -14,7 +14,7 @@ func TestCaptureMissingEvent(t *testing.T) {
 		t.Error("invalid error type returned when validating capture:", err)
 
 	} else if e != (FieldError{
-		Type:  "posthog.Capture",
+		Type:  "insights.Capture",
 		Name:  "Event",
 		Value: "",
 	}) {
@@ -34,7 +34,7 @@ func TestCaptureMissingDistinctId(t *testing.T) {
 		t.Error("invalid error type returned when validating capture:", err)
 
 	} else if e != (FieldError{
-		Type:  "posthog.Capture",
+		Type:  "insights.Capture",
 		Name:  "DistinctId",
 		Value: "",
 	}) {

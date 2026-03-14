@@ -3,7 +3,7 @@
   "batch": [
     {
       "event": "$exception",
-      "library": "posthog-go",
+      "library": "insights-go",
       "library_version": "1.0.0",
       "properties": {
         "$exception_list": [
@@ -11,7 +11,7 @@
             "stacktrace": {
               "frames": [
                 {
-                  "filename": "/Users/Developer/posthog-go/examples/main.go",
+                  "filename": "/Users/Developer/insights-go/examples/main.go",
                   "function": "main.main",
                   "in_app": true,
                   "lineno": 56,
@@ -26,7 +26,7 @@
           }
         ],
         "$geoip_disable": true,
-        "$lib": "posthog-go",
+        "$lib": "insights-go",
         "$lib_version": "1.0.0",
         "distinct_id": "my-user-id"
       },

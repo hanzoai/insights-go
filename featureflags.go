@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"bytes"
@@ -365,7 +365,7 @@ func (poller *FeatureFlagsPoller) run() {
 	}
 }
 
-// fetchNewFeatureFlags fetches the latest feature flag definitions from the PostHog API
+// fetchNewFeatureFlags fetches the latest feature flag definitions from the Insights API
 // These are used for local evaluation of feature flags and should not be confused with
 // the feature flags fetched from the flags API.
 func (poller *FeatureFlagsPoller) fetchNewFeatureFlags() {
@@ -413,7 +413,7 @@ func (poller *FeatureFlagsPoller) fetchNewFeatureFlags() {
 			groups:       map[string]string{},
 			flagsEtag:    "",
 		})
-		poller.Logger.Warnf("[FEATURE FLAGS] PostHog feature flags quota limited, resetting feature flag data. Learn more about billing limits at https://posthog.com/docs/billing/limits-alerts")
+		poller.Logger.Warnf("[FEATURE FLAGS] feature flags quota limited, resetting feature flag data")
 		return
 	}
 

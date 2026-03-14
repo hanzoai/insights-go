@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"bytes"
@@ -215,7 +215,7 @@ func (d *flagsClient) makeFlagsRequest(distinctId string, deviceId *string, grou
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "posthog-go/"+Version)
+	req.Header.Set("User-Agent", SDKName+"/"+Version)
 
 	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), d.featureFlagRequestTimeout)
@@ -244,7 +244,7 @@ func (d *flagsClient) makeFlagsRequest(distinctId string, deviceId *string, grou
 	}
 
 	if flagsResponse.ErrorsWhileComputingFlags {
-		d.logger.Errorf("error while computing feature flags, some flags may be missing or incorrect. Learn more at https://posthog.com/docs/feature-flags/best-practices")
+		d.logger.Errorf("error while computing feature flags, some flags may be missing or incorrect")
 	}
 
 	return &flagsResponse, nil
