@@ -10,7 +10,7 @@ import (
 )
 
 func TestErrorTrackingThroughEnqueueing(projectAPIKey, endpoint string) {
-	client, _ := posthog.NewWithConfig(projectAPIKey, posthog.Config{
+	client, _ := insights.NewWithConfig(projectAPIKey, insights.Config{
 		Interval:  30 * time.Second,
 		BatchSize: 100,
 		Verbose:   true,
@@ -28,7 +28,7 @@ func TestErrorTrackingThroughEnqueueing(projectAPIKey, endpoint string) {
 			return
 
 		case <-tick:
-			exception := posthog.NewDefaultException(
+			exception := insights.NewDefaultException(
 				time.Now(),
 				"distinct-id",
 				"Enqueued error",
@@ -43,7 +43,7 @@ func TestErrorTrackingThroughEnqueueing(projectAPIKey, endpoint string) {
 }
 
 func TestErrorTrackingThroughLogHandler(projectAPIKey, endpoint string) {
-	client, _ := posthog.NewWithConfig(projectAPIKey, posthog.Config{
+	client, _ := insights.NewWithConfig(projectAPIKey, insights.Config{
 		Interval:  30 * time.Second,
 		BatchSize: 100,
 		Verbose:   true,
@@ -52,8 +52,8 @@ func TestErrorTrackingThroughLogHandler(projectAPIKey, endpoint string) {
 	defer client.Close()
 
 	baseLogHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
-	log := slog.New(posthog.NewSlogCaptureHandler(baseLogHandler, client,
-		posthog.WithDistinctIDFn(func(ctx context.Context, r slog.Record) string {
+	log := slog.New(insights.NewSlogCaptureHandler(baseLogHandler, client,
+		insights.WithDistinctIDFn(func(ctx context.Context, r slog.Record) string {
 			// for demo purposes, real applications should likely pull this value from the context.
 			return "my-user-id"
 		}),

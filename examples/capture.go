@@ -10,7 +10,7 @@ import (
 func TestCapture(projectAPIKey, endpoint string) {
 	fmt.Println("📊 Capturing basic events...")
 
-	client, _ := posthog.NewWithConfig(projectAPIKey, posthog.Config{
+	client, _ := insights.NewWithConfig(projectAPIKey, insights.Config{
 		Interval:  30 * time.Second,
 		BatchSize: 100,
 		Verbose:   true,
@@ -20,11 +20,11 @@ func TestCapture(projectAPIKey, endpoint string) {
 
 	// Send a few different types of events
 	fmt.Println("→ Sending 'Download' event...")
-	if err := client.Enqueue(posthog.Capture{
+	if err := client.Enqueue(insights.Capture{
 		Event:      "Download",
 		DistinctId: "user_123456",
 		Properties: map[string]interface{}{
-			"application": "PostHog Go",
+			"application": "Insights Go",
 			"version":     "1.0.0",
 			"platform":    "macos",
 			"file_size":   "2.5MB",
@@ -35,12 +35,12 @@ func TestCapture(projectAPIKey, endpoint string) {
 	}
 
 	fmt.Println("→ Sending 'Page View' event...")
-	if err := client.Enqueue(posthog.Capture{
+	if err := client.Enqueue(insights.Capture{
 		Event:      "$pageview",
 		DistinctId: "user_123456",
 		Properties: map[string]interface{}{
 			"$current_url": "https://example.com/dashboard",
-			"$title":       "Dashboard - PostHog",
+			"$title":       "Dashboard - Insights",
 			"$referrer":    "https://google.com",
 		},
 	}); err != nil {
@@ -49,7 +49,7 @@ func TestCapture(projectAPIKey, endpoint string) {
 	}
 
 	fmt.Println("→ Sending 'Button Clicked' event...")
-	if err := client.Enqueue(posthog.Capture{
+	if err := client.Enqueue(insights.Capture{
 		Event:      "Button Clicked",
 		DistinctId: "user_123456",
 		Properties: map[string]interface{}{
@@ -71,7 +71,7 @@ func TestCaptureWithSendFeatureFlagOption(projectAPIKey, personalAPIKey, endpoin
 	fmt.Println("🏁 Capturing events with feature flags...")
 	fmt.Println("   This demonstrates how to automatically include feature flag states with events")
 
-	client, _ := posthog.NewWithConfig(projectAPIKey, posthog.Config{
+	client, _ := insights.NewWithConfig(projectAPIKey, insights.Config{
 		Interval:       30 * time.Second,
 		BatchSize:      100,
 		Verbose:        true,
@@ -81,7 +81,7 @@ func TestCaptureWithSendFeatureFlagOption(projectAPIKey, personalAPIKey, endpoin
 	defer client.Close()
 
 	fmt.Println("→ Sending event with SendFeatureFlags enabled...")
-	if err := client.Enqueue(posthog.Capture{
+	if err := client.Enqueue(insights.Capture{
 		Event:      "Purchase",
 		DistinctId: "user_123456",
 		Properties: map[string]interface{}{
@@ -89,14 +89,14 @@ func TestCaptureWithSendFeatureFlagOption(projectAPIKey, personalAPIKey, endpoin
 			"currency": "USD",
 			"product":  "Premium Plan",
 		},
-		SendFeatureFlags: posthog.SendFeatureFlags(true),
+		SendFeatureFlags: insights.SendFeatureFlags(true),
 	}); err != nil {
 		fmt.Println("❌ Error sending Purchase event:", err)
 		return
 	}
 
 	fmt.Println("→ Sending event without feature flags for comparison...")
-	if err := client.Enqueue(posthog.Capture{
+	if err := client.Enqueue(insights.Capture{
 		Event:      "Login",
 		DistinctId: "user_123456",
 		Properties: map[string]interface{}{
@@ -120,7 +120,7 @@ func TestCaptureWithSendFeatureFlagsOptions(projectAPIKey, personalAPIKey, endpo
 	fmt.Println("🚀 Advanced feature flags with SendFeatureFlagsOptions...")
 	fmt.Println("   This demonstrates advanced feature flag evaluation with custom properties")
 
-	client, _ := posthog.NewWithConfig(projectAPIKey, posthog.Config{
+	client, _ := insights.NewWithConfig(projectAPIKey, insights.Config{
 		Interval:       30 * time.Second,
 		BatchSize:      100,
 		Verbose:        true,
@@ -130,15 +130,15 @@ func TestCaptureWithSendFeatureFlagsOptions(projectAPIKey, personalAPIKey, endpo
 	defer client.Close()
 
 	fmt.Println("→ Sending event with custom person properties for flag evaluation...")
-	if err := client.Enqueue(posthog.Capture{
+	if err := client.Enqueue(insights.Capture{
 		Event:      "Feature Used",
 		DistinctId: "premium_user_456",
 		Properties: map[string]interface{}{
 			"feature_name": "advanced_analytics",
 			"usage_count":  1,
 		},
-		SendFeatureFlags: &posthog.SendFeatureFlagsOptions{
-			PersonProperties: posthog.NewProperties().Set("plan", "premium").Set("beta_user", true),
+		SendFeatureFlags: &insights.SendFeatureFlagsOptions{
+			PersonProperties: insights.NewProperties().Set("plan", "premium").Set("beta_user", true),
 		},
 	}); err != nil {
 		fmt.Println("❌ Error sending feature usage event:", err)
@@ -146,18 +146,18 @@ func TestCaptureWithSendFeatureFlagsOptions(projectAPIKey, personalAPIKey, endpo
 	}
 
 	fmt.Println("→ Sending event with local-only evaluation and group properties...")
-	if err := client.Enqueue(posthog.Capture{
+	if err := client.Enqueue(insights.Capture{
 		Event:      "Team Action",
 		DistinctId: "enterprise_user_789",
 		Properties: map[string]interface{}{
 			"action_type": "export_data",
 			"data_size":   "50MB",
 		},
-		SendFeatureFlags: &posthog.SendFeatureFlagsOptions{
+		SendFeatureFlags: &insights.SendFeatureFlagsOptions{
 			OnlyEvaluateLocally: true,
-			PersonProperties:    posthog.NewProperties().Set("plan", "enterprise").Set("role", "admin"),
-			GroupProperties: map[string]posthog.Properties{
-				"company": posthog.NewProperties().Set("name", "PostHog").Set("plan", "enterprise").Set("employees", 100),
+			PersonProperties:    insights.NewProperties().Set("plan", "enterprise").Set("role", "admin"),
+			GroupProperties: map[string]insights.Properties{
+				"company": insights.NewProperties().Set("name", "Hanzo AI").Set("plan", "enterprise").Set("employees", 100),
 			},
 		},
 	}); err != nil {
@@ -166,16 +166,16 @@ func TestCaptureWithSendFeatureFlagsOptions(projectAPIKey, personalAPIKey, endpo
 	}
 
 	fmt.Println("→ Sending event with minimal local evaluation...")
-	if err := client.Enqueue(posthog.Capture{
+	if err := client.Enqueue(insights.Capture{
 		Event:      "Quick Action",
 		DistinctId: "basic_user_321",
 		Properties: map[string]interface{}{
 			"action": "button_click",
 			"page":   "homepage",
 		},
-		SendFeatureFlags: &posthog.SendFeatureFlagsOptions{
+		SendFeatureFlags: &insights.SendFeatureFlagsOptions{
 			OnlyEvaluateLocally: true,
-			PersonProperties:    posthog.NewProperties().Set("plan", "free"),
+			PersonProperties:    insights.NewProperties().Set("plan", "free"),
 		},
 	}); err != nil {
 		fmt.Println("❌ Error sending quick action event:", err)

@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import "testing"
 
@@ -14,7 +14,7 @@ func TestAliasMissingDistinctId(t *testing.T) {
 		t.Error("invalid error type returned when validating alias:", err)
 
 	} else if e != (FieldError{
-		Type:  "posthog.Alias",
+		Type:  "insights.Alias",
 		Name:  "DistinctId",
 		Value: "",
 	}) {
@@ -34,7 +34,7 @@ func TestAliasMissingAlias(t *testing.T) {
 		t.Error("invalid error type returned when validating alias:", err)
 
 	} else if e != (FieldError{
-		Type:  "posthog.Alias",
+		Type:  "insights.Alias",
 		Name:  "Alias",
 		Value: "",
 	}) {

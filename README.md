@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/hanzoai/insights-go)](https://goreportcard.com/report/github.com/hanzoai/insights-go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Go client SDK for Hanzo Insights (product analytics). Built on PostHog Go client.
+Go client SDK for Hanzo Insights (product analytics).
 
 ## Install
 
@@ -20,23 +20,23 @@ package main
 import (
     "os"
 
-    posthog "github.com/hanzoai/insights-go"
+    insights "github.com/hanzoai/insights-go"
 )
 
 func main() {
-    client, _ := posthog.NewWithConfig(
+    client, _ := insights.NewWithConfig(
         os.Getenv("INSIGHTS_API_KEY"),
-        posthog.Config{
+        insights.Config{
             Endpoint: "https://insights.hanzo.ai",
         },
     )
     defer client.Close()
 
     // Capture an event
-    client.Enqueue(posthog.Capture{
+    client.Enqueue(insights.Capture{
         DistinctId: "user-123",
         Event:      "purchase",
-        Properties: posthog.NewProperties().
+        Properties: insights.NewProperties().
             Set("plan", "enterprise").
             Set("amount", 99),
     })
@@ -48,10 +48,10 @@ func main() {
 ### Capture Events
 
 ```go
-client.Enqueue(posthog.Capture{
+client.Enqueue(insights.Capture{
     DistinctId: "user-123",
     Event:      "page_view",
-    Properties: posthog.NewProperties().
+    Properties: insights.NewProperties().
         Set("$current_url", "https://example.com/pricing"),
 })
 ```
@@ -59,9 +59,9 @@ client.Enqueue(posthog.Capture{
 ### Identify Users
 
 ```go
-client.Enqueue(posthog.Identify{
+client.Enqueue(insights.Identify{
     DistinctId: "user-123",
-    Properties: posthog.NewProperties().
+    Properties: insights.NewProperties().
         Set("email", "alice@example.com").
         Set("name", "Alice").
         Set("plan", "pro"),
@@ -73,7 +73,7 @@ client.Enqueue(posthog.Identify{
 ```go
 // Check if a flag is enabled
 enabled, err := client.IsFeatureEnabled(
-    posthog.FeatureFlagPayload{
+    insights.FeatureFlagPayload{
         Key:        "new-dashboard",
         DistinctId: "user-123",
     },
@@ -85,7 +85,7 @@ if enabled == true {
 
 // Get flag variant
 variant, err := client.GetFeatureFlag(
-    posthog.FeatureFlagPayload{
+    insights.FeatureFlagPayload{
         Key:        "checkout-flow",
         DistinctId: "user-123",
     },
@@ -96,19 +96,19 @@ variant, err := client.GetFeatureFlag(
 
 ```go
 // Associate a user with a group
-client.Enqueue(posthog.GroupIdentify{
+client.Enqueue(insights.GroupIdentify{
     Type: "company",
     Key:  "hanzo-ai",
-    Properties: posthog.NewProperties().
+    Properties: insights.NewProperties().
         Set("name", "Hanzo AI").
         Set("industry", "technology"),
 })
 
 // Capture event with group context
-client.Enqueue(posthog.Capture{
+client.Enqueue(insights.Capture{
     DistinctId: "user-123",
     Event:      "deploy",
-    Groups: posthog.NewGroups().
+    Groups: insights.NewGroups().
         Set("company", "hanzo-ai"),
 })
 ```
@@ -116,7 +116,7 @@ client.Enqueue(posthog.Capture{
 ### Alias Users
 
 ```go
-client.Enqueue(posthog.Alias{
+client.Enqueue(insights.Alias{
     DistinctId: "user-123",
     Alias:      "user-456",
 })
@@ -125,14 +125,14 @@ client.Enqueue(posthog.Alias{
 ## Configuration
 
 ```go
-client, _ := posthog.NewWithConfig(
+client, _ := insights.NewWithConfig(
     os.Getenv("INSIGHTS_API_KEY"),
-    posthog.Config{
+    insights.Config{
         Endpoint:       "https://insights.hanzo.ai",
         PersonalApiKey: os.Getenv("INSIGHTS_PERSONAL_KEY"), // For local feature flag evaluation
         BatchSize:      100,
         Interval:       5 * time.Second,
-        MaxRetries:     posthog.Ptr(3),
+        MaxRetries:     insights.Ptr(3),
         RetryAfter: func(attempt int) time.Duration {
             return time.Duration(100<<attempt) * time.Millisecond
         },
@@ -149,15 +149,15 @@ Monitor delivery with a callback:
 ```go
 type DeliveryLogger struct{}
 
-func (d *DeliveryLogger) Success(msg posthog.APIMessage) {
+func (d *DeliveryLogger) Success(msg insights.APIMessage) {
     log.Printf("delivered: %v", msg)
 }
 
-func (d *DeliveryLogger) Failure(msg posthog.APIMessage, err error) {
+func (d *DeliveryLogger) Failure(msg insights.APIMessage, err error) {
     log.Printf("dropped: %v err=%v", msg, err)
 }
 
-client, _ := posthog.NewWithConfig(apiKey, posthog.Config{
+client, _ := insights.NewWithConfig(apiKey, insights.Config{
     Callback: &DeliveryLogger{},
 })
 ```
@@ -172,7 +172,7 @@ make test           # Run tests only
 
 ## Attribution
 
-Based on PostHog Go. See upstream LICENSE for attribution.
+Based on PostHog Go SDK. See upstream LICENSE for attribution.
 
 ## License
 

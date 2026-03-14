@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"time"
@@ -27,7 +27,7 @@ func (msg Alias) internal() {
 func (msg Alias) Validate() error {
 	if len(msg.DistinctId) == 0 {
 		return FieldError{
-			Type:  "posthog.Alias",
+			Type:  "insights.Alias",
 			Name:  "DistinctId",
 			Value: msg.DistinctId,
 		}
@@ -35,7 +35,7 @@ func (msg Alias) Validate() error {
 
 	if len(msg.Alias) == 0 {
 		return FieldError{
-			Type:  "posthog.Alias",
+			Type:  "insights.Alias",
 			Name:  "Alias",
 			Value: msg.Alias,
 		}

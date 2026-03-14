@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"bytes"
@@ -4297,7 +4297,7 @@ func TestFlagDefinitionsWithTimeoutExceeded(t *testing.T) {
 		PersonalApiKey:            "some very secret key",
 		Endpoint:                  server.URL,
 		FeatureFlagRequestTimeout: 100 * time.Millisecond,
-		Logger:                    StdLogger(log.New(&buf, "posthog-test", log.LstdFlags), false),
+		Logger:                    StdLogger(log.New(&buf, "insights-test", log.LstdFlags), false),
 	})
 	if clientErr != nil {
 		t.Fatalf("Client creation failed: %v", clientErr)

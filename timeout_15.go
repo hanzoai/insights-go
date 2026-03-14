@@ -1,7 +1,7 @@
 //go:build !go1.6
 // +build !go1.6
 
-package posthog
+package insights
 
 import "net/http"
 

@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"reflect"
@@ -31,7 +31,7 @@ func TestException_Validate(t *testing.T) {
 				},
 			},
 			expectedError: FieldError{
-				Type:  "posthog.Exception",
+				Type:  "insights.Exception",
 				Name:  "DistinctId",
 				Value: "",
 			},
@@ -42,7 +42,7 @@ func TestException_Validate(t *testing.T) {
 				Timestamp:  now,
 			},
 			expectedError: FieldError{
-				Type:  "posthog.Exception",
+				Type:  "insights.Exception",
 				Name:  "ExceptionList",
 				Value: []ExceptionItem{},
 			},
@@ -56,7 +56,7 @@ func TestException_Validate(t *testing.T) {
 				},
 			},
 			expectedError: FieldError{
-				Type:  "posthog.Exception",
+				Type:  "insights.Exception",
 				Name:  "Type",
 				Value: "",
 			},
@@ -70,7 +70,7 @@ func TestException_Validate(t *testing.T) {
 				},
 			},
 			expectedError: FieldError{
-				Type:  "posthog.Exception",
+				Type:  "insights.Exception",
 				Name:  "Value",
 				Value: "",
 			},

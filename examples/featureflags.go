@@ -9,7 +9,7 @@ import (
 )
 
 func TestIsFeatureEnabled(projectAPIKey, personalAPIKey, endpoint string) {
-	client, err := posthog.NewWithConfig(projectAPIKey, posthog.Config{
+	client, err := insights.NewWithConfig(projectAPIKey, insights.Config{
 		Interval:                           30 * time.Second,
 		BatchSize:                          100,
 		Verbose:                            true,
@@ -25,7 +25,7 @@ func TestIsFeatureEnabled(projectAPIKey, personalAPIKey, endpoint string) {
 	defer client.Close()
 
 	boolResult, boolErr := client.IsFeatureEnabled(
-		posthog.FeatureFlagPayload{
+		insights.FeatureFlagPayload{
 			Key:        "multivariate-test",
 			DistinctId: "hello",
 		})
@@ -37,7 +37,7 @@ func TestIsFeatureEnabled(projectAPIKey, personalAPIKey, endpoint string) {
 	}
 
 	// Simple flag
-	simpleResult, simpleErr := client.GetFeatureFlag(posthog.FeatureFlagPayload{
+	simpleResult, simpleErr := client.GetFeatureFlag(insights.FeatureFlagPayload{
 		Key:        "simple-test",
 		DistinctId: "hello",
 	})
@@ -48,7 +48,7 @@ func TestIsFeatureEnabled(projectAPIKey, personalAPIKey, endpoint string) {
 	}
 
 	// Multivariate flag
-	variantResult, variantErr := client.GetFeatureFlag(posthog.FeatureFlagPayload{
+	variantResult, variantErr := client.GetFeatureFlag(insights.FeatureFlagPayload{
 		Key:        "multivariate-test",
 		DistinctId: "hello",
 	})
@@ -58,7 +58,7 @@ func TestIsFeatureEnabled(projectAPIKey, personalAPIKey, endpoint string) {
 	}
 
 	// Multivariate + simple flag
-	variantResult, variantErr = client.GetFeatureFlag(posthog.FeatureFlagPayload{
+	variantResult, variantErr = client.GetFeatureFlag(insights.FeatureFlagPayload{
 		Key:        "multivariate-simple-test",
 		DistinctId: "hello",
 	})
@@ -104,7 +104,7 @@ func TestFlagDependencies(projectAPIKey, personalAPIKey, endpoint string) {
 	fmt.Println("      - Rollout: 100%")
 	fmt.Println("")
 
-	client, err := posthog.NewWithConfig(projectAPIKey, posthog.Config{
+	client, err := insights.NewWithConfig(projectAPIKey, insights.Config{
 		Interval:                           30 * time.Second,
 		BatchSize:                          100,
 		Verbose:                            false, // Disable verbose logging for cleaner output
@@ -122,10 +122,10 @@ func TestFlagDependencies(projectAPIKey, personalAPIKey, endpoint string) {
 	fmt.Println("→ Testing @example.com user (should satisfy dependency if flags exist)...")
 	// Disable automatic $feature_flag_called events for cleaner output
 	sendEvents := false
-	result1, err1 := client.IsFeatureEnabled(posthog.FeatureFlagPayload{
+	result1, err1 := client.IsFeatureEnabled(insights.FeatureFlagPayload{
 		Key:                   "test-flag-dependency",
 		DistinctId:            "example_user",
-		PersonProperties:      posthog.NewProperties().Set("email", "user@example.com"),
+		PersonProperties:      insights.NewProperties().Set("email", "user@example.com"),
 		OnlyEvaluateLocally:   true,
 		SendFeatureFlagEvents: &sendEvents,
 	})
@@ -137,10 +137,10 @@ func TestFlagDependencies(projectAPIKey, personalAPIKey, endpoint string) {
 	}
 
 	fmt.Println("→ Testing regular user (dependency should not be satisfied)...")
-	result2, err2 := client.IsFeatureEnabled(posthog.FeatureFlagPayload{
+	result2, err2 := client.IsFeatureEnabled(insights.FeatureFlagPayload{
 		Key:                   "test-flag-dependency",
 		DistinctId:            "regular_user",
-		PersonProperties:      posthog.NewProperties().Set("email", "user@other.com"),
+		PersonProperties:      insights.NewProperties().Set("email", "user@other.com"),
 		OnlyEvaluateLocally:   true,
 		SendFeatureFlagEvents: &sendEvents,
 	})
@@ -153,18 +153,18 @@ func TestFlagDependencies(projectAPIKey, personalAPIKey, endpoint string) {
 
 	fmt.Println("→ Testing beta-feature directly for comparison...")
 
-	beta1, betaErr1 := client.IsFeatureEnabled(posthog.FeatureFlagPayload{
+	beta1, betaErr1 := client.IsFeatureEnabled(insights.FeatureFlagPayload{
 		Key:                   "beta-feature",
 		DistinctId:            "example_user",
-		PersonProperties:      posthog.NewProperties().Set("email", "user@example.com"),
+		PersonProperties:      insights.NewProperties().Set("email", "user@example.com"),
 		OnlyEvaluateLocally:   true,
 		SendFeatureFlagEvents: &sendEvents,
 	})
 
-	beta2, betaErr2 := client.IsFeatureEnabled(posthog.FeatureFlagPayload{
+	beta2, betaErr2 := client.IsFeatureEnabled(insights.FeatureFlagPayload{
 		Key:                   "beta-feature",
 		DistinctId:            "regular_user",
-		PersonProperties:      posthog.NewProperties().Set("email", "user@other.com"),
+		PersonProperties:      insights.NewProperties().Set("email", "user@other.com"),
 		OnlyEvaluateLocally:   true,
 		SendFeatureFlagEvents: &sendEvents,
 	})
@@ -178,10 +178,10 @@ func TestFlagDependencies(projectAPIKey, personalAPIKey, endpoint string) {
 	fmt.Println("→ Testing multivariate dependency chains...")
 
 	// Test pineapple -> blue -> breaking-bad chain
-	dependentResult3, err3 := client.GetFeatureFlag(posthog.FeatureFlagPayload{
+	dependentResult3, err3 := client.GetFeatureFlag(insights.FeatureFlagPayload{
 		Key:                   "multivariate-root-flag",
 		DistinctId:            "regular_user",
-		PersonProperties:      posthog.NewProperties().Set("email", "pineapple@example.com"),
+		PersonProperties:      insights.NewProperties().Set("email", "pineapple@example.com"),
 		OnlyEvaluateLocally:   true,
 		SendFeatureFlagEvents: &sendEvents,
 	})
@@ -195,10 +195,10 @@ func TestFlagDependencies(projectAPIKey, personalAPIKey, endpoint string) {
 	}
 
 	// Test mango -> red -> the-wire chain
-	dependentResult4, err4 := client.GetFeatureFlag(posthog.FeatureFlagPayload{
+	dependentResult4, err4 := client.GetFeatureFlag(insights.FeatureFlagPayload{
 		Key:                   "multivariate-root-flag",
 		DistinctId:            "regular_user",
-		PersonProperties:      posthog.NewProperties().Set("email", "mango@example.com"),
+		PersonProperties:      insights.NewProperties().Set("email", "mango@example.com"),
 		OnlyEvaluateLocally:   true,
 		SendFeatureFlagEvents: &sendEvents,
 	})

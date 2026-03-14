@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"time"
@@ -27,7 +27,7 @@ func (msg Identify) internal() {
 func (msg Identify) Validate() error {
 	if len(msg.DistinctId) == 0 {
 		return FieldError{
-			Type:  "posthog.Identify",
+			Type:  "insights.Identify",
 			Name:  "DistinctId",
 			Value: msg.DistinctId,
 		}

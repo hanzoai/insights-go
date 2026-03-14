@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 // Groups is used to represent groups in messages that support it.
 // It is a free-form object so the application can set any value it sees fit but

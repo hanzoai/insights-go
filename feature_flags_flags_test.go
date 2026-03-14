@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"errors"
@@ -96,7 +96,7 @@ func TestFlags(t *testing.T) {
 			}{
 				{name: "IsFeatureEnabled", flagKey: "enabled-flag", expected: true},
 				{name: "IsFeatureEnabled", flagKey: "disabled-flag", expected: false},
-				{name: "IsFeatureEnabled", flagKey: "non-existent-flag", expected: false}, // Note: This differs from posthog-node which returns undefined for non-existent flags
+				{name: "IsFeatureEnabled", flagKey: "non-existent-flag", expected: false}, // Note: This differs from insights-node which returns undefined for non-existent flags
 			}
 
 			for _, subTest := range subTests {
@@ -136,7 +136,7 @@ func TestFlags(t *testing.T) {
 				{name: "GetFeatureFlag", flagKey: "enabled-flag", expected: true},
 				{name: "GetFeatureFlag", flagKey: "disabled-flag", expected: false},
 				{name: "GetFeatureFlag", flagKey: "multi-variate-flag", expected: "hello"},
-				{name: "GetFeatureFlag", flagKey: "non-existent-flag", expected: false}, // Note: This differs from posthog-node which returns undefined for non-existent flags
+				{name: "GetFeatureFlag", flagKey: "non-existent-flag", expected: false}, // Note: This differs from insights-node which returns undefined for non-existent flags
 			}
 
 			for _, subTest := range subTests {

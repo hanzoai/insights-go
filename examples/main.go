@@ -1,13 +1,13 @@
-// PostHog Go library examples
+// Insights Go library examples
 //
-// This script demonstrates various PostHog Go SDK capabilities including:
+// This script demonstrates various Insights Go SDK capabilities including:
 // - Basic event capture and user identification
 // - Feature flag local evaluation
 // - Feature flag payloads
 // - Context management
 //
 // Setup:
-// 1. Copy .env.example to .env and fill in your PostHog credentials
+// 1. Copy .env.example to .env and fill in your Insights credentials
 // 2. Run this script and choose from the interactive menu
 
 package main
@@ -29,16 +29,16 @@ var (
 )
 
 func init() {
-	// Load .env file if it exists (similar to Python SDK)
+	// Load .env file if it exists
 	_ = godotenv.Load()
 
 	// Get configuration from environment variables
-	projectAPIKey = os.Getenv("POSTHOG_PROJECT_API_KEY")
-	personalAPIKey = os.Getenv("POSTHOG_PERSONAL_API_KEY")
-	endpoint = os.Getenv("POSTHOG_ENDPOINT")
+	projectAPIKey = os.Getenv("INSIGHTS_PROJECT_API_KEY")
+	personalAPIKey = os.Getenv("INSIGHTS_PERSONAL_API_KEY")
+	endpoint = os.Getenv("INSIGHTS_ENDPOINT")
 
 	if endpoint == "" {
-		endpoint = "http://localhost:8000"
+		endpoint = "https://insights.hanzo.ai"
 	}
 }
 
@@ -63,19 +63,19 @@ func promptForInput(prompt string) string {
 func checkCredentials() {
 	// Check if credentials are provided
 	if projectAPIKey == "" || personalAPIKey == "" {
-		fmt.Println("❌ Missing PostHog credentials!")
-		fmt.Println("   Please set POSTHOG_PROJECT_API_KEY and POSTHOG_PERSONAL_API_KEY environment variables")
+		fmt.Println("Missing Insights credentials!")
+		fmt.Println("   Please set INSIGHTS_PROJECT_API_KEY and INSIGHTS_PERSONAL_API_KEY environment variables")
 		fmt.Println("   or copy .env.example to .env and fill in your values")
 		fmt.Println()
 
 		if projectAPIKey == "" {
-			projectAPIKey = promptForInput("Enter your PostHog project API key (starts with phc_): ")
+			projectAPIKey = promptForInput("Enter your Insights project API key: ")
 		}
 		if personalAPIKey == "" {
-			personalAPIKey = promptForInput("Enter your PostHog personal API key (starts with phx_): ")
+			personalAPIKey = promptForInput("Enter your Insights personal API key: ")
 		}
 	} else {
-		fmt.Println("✅ PostHog credentials loaded successfully!")
+		fmt.Println("Insights credentials loaded successfully!")
 		fmt.Println("   Project API Key: [REDACTED]")
 		fmt.Println("   Personal API Key: [REDACTED]")
 		fmt.Printf("   Endpoint: %s\n\n", endpoint)
@@ -83,7 +83,7 @@ func checkCredentials() {
 }
 
 func showMenu() {
-	fmt.Println("🚀 PostHog Go SDK Demo - Choose an example to run:")
+	fmt.Println("Insights Go SDK Demo - Choose an example to run:")
 	fmt.Println()
 	fmt.Println("1. Basic capture examples")
 	fmt.Println("2. Capture with feature flags examples")
@@ -138,23 +138,23 @@ func runETagPollingExample() {
 }
 
 func runAllExamples() {
-	fmt.Println("\n🔄 Running all examples...")
+	fmt.Println("\nRunning all examples...")
 
-	fmt.Printf("\n%s BASIC CAPTURE %s\n", strings.Repeat("🔸", 20), strings.Repeat("🔸", 20))
+	fmt.Println("\n--- BASIC CAPTURE ---")
 	TestCapture(projectAPIKey, endpoint)
 
-	fmt.Printf("\n%s CAPTURE WITH FEATURE FLAGS %s\n", strings.Repeat("🔸", 15), strings.Repeat("🔸", 15))
+	fmt.Println("\n--- CAPTURE WITH FEATURE FLAGS ---")
 	TestCaptureWithSendFeatureFlagOption(projectAPIKey, personalAPIKey, endpoint)
 
-	fmt.Printf("\n%s FEATURE FLAG EVALUATION %s\n", strings.Repeat("🔸", 17), strings.Repeat("🔸", 17))
+	fmt.Println("\n--- FEATURE FLAG EVALUATION ---")
 	TestIsFeatureEnabled(projectAPIKey, personalAPIKey, endpoint)
 	TestErrorTrackingThroughEnqueueing(projectAPIKey, endpoint)
 	TestErrorTrackingThroughLogHandler(projectAPIKey, endpoint)
 
-	fmt.Printf("\n%s ADVANCED FEATURE FLAGS %s\n", strings.Repeat("🔸", 18), strings.Repeat("🔸", 18))
+	fmt.Println("\n--- ADVANCED FEATURE FLAGS ---")
 	TestCaptureWithSendFeatureFlagsOptions(projectAPIKey, personalAPIKey, endpoint)
 
-	fmt.Printf("\n%s FLAG DEPENDENCIES %s\n", strings.Repeat("🔸", 20), strings.Repeat("🔸", 20))
+	fmt.Println("\n--- FLAG DEPENDENCIES ---")
 	TestFlagDependencies(projectAPIKey, personalAPIKey, endpoint)
 }
 
@@ -169,7 +169,7 @@ func main() {
 
 	// If not interactive, just run all examples
 	if !isInteractive() {
-		fmt.Println("🤖 Non-interactive mode detected. Running all examples...")
+		fmt.Println("Non-interactive mode detected. Running all examples...")
 		runAllExamples()
 		return
 	}
@@ -196,21 +196,21 @@ func main() {
 		case "7":
 			runAllExamples()
 		case "8":
-			fmt.Println("👋 Goodbye!")
+			fmt.Println("Goodbye!")
 			return
 		default:
-			fmt.Println("❌ Invalid choice. Please select 1-8.")
+			fmt.Println("Invalid choice. Please select 1-8.")
 			continue
 		}
 
 		fmt.Println("\n" + strings.Repeat("=", 60))
-		fmt.Println("✅ Example completed!")
+		fmt.Println("Example completed!")
 		fmt.Println(strings.Repeat("=", 60))
 
 		// Ask if user wants to run another example
 		again := promptForInput("\nWould you like to run another example? (y/N): ")
 		if strings.ToLower(again) != "y" && strings.ToLower(again) != "yes" {
-			fmt.Println("👋 Goodbye!")
+			fmt.Println("Goodbye!")
 			break
 		}
 		fmt.Println()

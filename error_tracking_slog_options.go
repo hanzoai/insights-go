@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 type captureConfig struct {
 	// minCaptureLevel is the lowest slog.Level at which a log record
-	// will be sent to PostHog. Records below this level are ignored.
+	// will be sent to Insights. Records below this level are ignored.
 	// Default: slog.LevelWarn.
 	minCaptureLevel slog.Level
 
@@ -18,7 +18,7 @@ type captureConfig struct {
 	distinctID func(ctx context.Context, r slog.Record) string
 
 	// fingerprint optionally computes a custom exception fingerprint
-	// for grouping similar errors together in PostHog. If nil, PostHog will
+	// for grouping similar errors together in Insights. If nil, Insights will
 	// assign a fingerprint during processing.
 	fingerprint func(ctx context.Context, r slog.Record) *string
 
@@ -28,7 +28,7 @@ type captureConfig struct {
 	skip int
 
 	// stackTraceExtractor determines how stack traces are collected
-	// and transformed into PostHog-compatible data structures.
+	// and transformed into Insights-compatible data structures.
 	stackTraceExtractor StackTraceExtractor
 
 	// descriptionExtractor extracts a human-readable description to

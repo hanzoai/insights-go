@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import "testing"
 
@@ -12,7 +12,7 @@ func TestIdentifyMissingDistinctId(t *testing.T) {
 		t.Error("invalid error type returned when validating identify:", err)
 
 	} else if e != (FieldError{
-		Type:  "posthog.Identify",
+		Type:  "insights.Identify",
 		Name:  "DistinctId",
 		Value: "",
 	}) {

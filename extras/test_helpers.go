@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	posthog "github.com/hanzoai/insights-go"
+	insights "github.com/hanzoai/insights-go"
 )
 
 // timeoutTransport wraps an http.RoundTripper with a timeout.
@@ -22,26 +22,26 @@ func (t *timeoutTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return t.rt.RoundTrip(req.WithContext(ctx))
 }
 
-// testCallback implements posthog.Callback to track success/failure in tests.
+// testCallback implements insights.Callback to track success/failure in tests.
 type testCallback struct {
 	t            *testing.T
 	mu           sync.Mutex
 	successCount int
 	failureCount int
 	lastError    error
-	successChan  chan posthog.APIMessage
+	successChan  chan insights.APIMessage
 	failureChan  chan error
 }
 
 func newTestCallback(t *testing.T) *testCallback {
 	return &testCallback{
 		t:           t,
-		successChan: make(chan posthog.APIMessage, 100),
+		successChan: make(chan insights.APIMessage, 100),
 		failureChan: make(chan error, 100),
 	}
 }
 
-func (c *testCallback) Success(msg posthog.APIMessage) {
+func (c *testCallback) Success(msg insights.APIMessage) {
 	c.mu.Lock()
 	c.successCount++
 	c.mu.Unlock()
@@ -49,7 +49,7 @@ func (c *testCallback) Success(msg posthog.APIMessage) {
 	c.successChan <- msg
 }
 
-func (c *testCallback) Failure(msg posthog.APIMessage, err error) {
+func (c *testCallback) Failure(msg insights.APIMessage, err error) {
 	c.mu.Lock()
 	c.failureCount++
 	c.lastError = err
