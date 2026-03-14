@@ -84,7 +84,7 @@ func TestETagPolling(projectAPIKey, personalAPIKey, endpointURL string) {
 		wrapped: http.DefaultTransport,
 	}
 
-	client, err := posthog.NewWithConfig(projectAPIKey, posthog.Config{
+	client, err := insights.NewWithConfig(projectAPIKey, insights.Config{
 		PersonalApiKey:                     personalAPIKey,
 		Endpoint:                           endpointURL,
 		DefaultFeatureFlagsPollingInterval: etagPollInterval,
@@ -125,14 +125,14 @@ func TestETagPolling(projectAPIKey, personalAPIKey, endpointURL string) {
 	}
 }
 
-func logETagFlagState(client posthog.Client) {
+func logETagFlagState(client insights.Client) {
 	fmt.Println(strings.Repeat("-", 40))
 
 	// Disable $feature_flag_called events to avoid /batch/ requests
 	sendEvents := false
 
 	// Test a flag to verify the client is working
-	result, err := client.IsFeatureEnabled(posthog.FeatureFlagPayload{
+	result, err := client.IsFeatureEnabled(insights.FeatureFlagPayload{
 		Key:                   "test-flag",
 		DistinctId:            "test-user",
 		OnlyEvaluateLocally:   true,

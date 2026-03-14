@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ func (msg GroupIdentify) internal() {
 func (msg GroupIdentify) Validate() error {
 	if len(msg.Type) == 0 {
 		return FieldError{
-			Type:  "posthog.GroupIdentify",
+			Type:  "insights.GroupIdentify",
 			Name:  "Type",
 			Value: msg.Type,
 		}
@@ -32,7 +32,7 @@ func (msg GroupIdentify) Validate() error {
 
 	if len(msg.Key) == 0 {
 		return FieldError{
-			Type:  "posthog.GroupIdentify",
+			Type:  "insights.GroupIdentify",
 			Name:  "Key",
 			Value: msg.Key,
 		}

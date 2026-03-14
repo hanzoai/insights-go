@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ func SimpleInAppDecider(frame runtime.Frame) bool {
 // StackTraceExtractor produces a stack trace for the current goroutine to
 // enrich captured exceptions with call-site context.
 type StackTraceExtractor interface {
-	// GetStackTrace returns a PostHog-compatible stack trace.
+	// GetStackTrace returns an Insights-compatible stack trace.
 	//
 	// The skip parameter controls how many leading frames to omit before
 	// recording. Use it to drop extractor/logging internals and start at the

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/orian/flakyhttp"
-	posthog "github.com/hanzoai/insights-go"
+	insights "github.com/hanzoai/insights-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -64,7 +64,7 @@ func TestEOFScenarios(t *testing.T) {
 
 			callback := newTestCallback(t)
 
-			clientConfig := posthog.Config{
+			clientConfig := insights.Config{
 				Endpoint: url,
 				Transport: &timeoutTransport{
 					rt:      http.DefaultTransport,
@@ -72,18 +72,18 @@ func TestEOFScenarios(t *testing.T) {
 				},
 				Interval:   50 * time.Millisecond,
 				BatchSize:  1,
-				Logger:     posthog.StdLogger(log.New(os.Stderr, "[posthog] ", log.LstdFlags), true),
+				Logger:     insights.StdLogger(log.New(os.Stderr, "[insights] ", log.LstdFlags), true),
 				Callback:   callback,
 				RetryAfter: func(i int) time.Duration { return time.Millisecond },
 			}
 			if tc.disableRetries {
-				clientConfig.MaxRetries = posthog.Ptr[int](0)
+				clientConfig.MaxRetries = insights.Ptr[int](0)
 			}
 
-			client, err := posthog.NewWithConfig("test-api-key", clientConfig)
-			require.NoError(t, err, "Failed to create PostHog client")
+			client, err := insights.NewWithConfig("test-api-key", clientConfig)
+			require.NoError(t, err, "Failed to create Insights client")
 
-			err = client.Enqueue(posthog.Capture{
+			err = client.Enqueue(insights.Capture{
 				DistinctId: "testuser",
 				Event:      "test event",
 				Properties: map[string]interface{}{

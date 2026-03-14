@@ -1,36 +1,36 @@
-package posthog
+package insights
 
 import (
 	"log"
 	"os"
 )
 
-// Logger defines an interface for a logger used by the PostHog clientś.
+// Logger defines an interface for a logger used by the Insights client.
 type Logger interface {
-	// Debugf is called by PostHog client to log debug messages about the
-	// operations they perform. Messages logged by this method are usually
-	// tagged with an `DEBUG` log level in common logging libraries.
+	// Debugf is called by the Insights client to log debug messages about the
+	// operations it performs. Messages logged by this method are usually
+	// tagged with a `DEBUG` log level in common logging libraries.
 	Debugf(format string, args ...interface{})
 
-	// Logf is called by PostHog client to log regular messages about the
-	// operations they perform. Messages logged by this method are usually
+	// Logf is called by the Insights client to log regular messages about the
+	// operations it performs. Messages logged by this method are usually
 	// tagged with an `INFO` log level in common logging libraries.
 	Logf(format string, args ...interface{})
 
-	// Warnf is called by PostHog client to log warning messages about
-	// the operations they perform. Messages logged by this method are usually
-	// tagged with an `WARN` log level in common logging libraries.
+	// Warnf is called by the Insights client to log warning messages about
+	// the operations it performs. Messages logged by this method are usually
+	// tagged with a `WARN` log level in common logging libraries.
 	Warnf(format string, args ...interface{})
 
-	// Errorf is called by PostHog clients call this method to log errors
-	// they encounter while sending events to the backend servers.
+	// Errorf is called by the Insights client to log errors encountered
+	// while sending events to the backend servers.
 	// Messages logged by this method are usually tagged with an `ERROR` log
 	// level in common logging libraries.
 	Errorf(format string, args ...interface{})
 }
 
-// This function instantiate an object that statisfies the posthog.Logger
-// interface and send logs to standard logger passed as argument.
+// StdLogger creates an object that satisfies the insights.Logger
+// interface and sends logs to the standard logger passed as argument.
 func StdLogger(logger *log.Logger, verbose bool) Logger {
 	return stdLogger{
 		logger:  logger,
@@ -62,5 +62,5 @@ func (l stdLogger) Errorf(format string, args ...interface{}) {
 }
 
 func newDefaultLogger(verbose bool) Logger {
-	return StdLogger(log.New(os.Stderr, "posthog ", log.LstdFlags), verbose)
+	return StdLogger(log.New(os.Stderr, "insights ", log.LstdFlags), verbose)
 }

@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"time"
@@ -43,8 +43,6 @@ type ExceptionStacktrace struct {
 }
 
 // StackFrame represents a single "Frame" within a stack trace.
-// Documentation about the available fields can be found here:
-// https://github.com/PostHog/posthog/blob/39b9326320c23acbdc6e96a8beb41b30d3c99099/rust/cymbal/src/langs/go.rs#L7
 type StackFrame struct {
 	Filename  string `json:"filename"`
 	LineNo    int    `json:"lineno"`
@@ -78,14 +76,14 @@ func (msg Exception) internal() { panic(unimplementedError) }
 func (msg Exception) Validate() error {
 	if len(msg.DistinctId) == 0 {
 		return FieldError{
-			Type:  "posthog.Exception",
+			Type:  "insights.Exception",
 			Name:  "DistinctId",
 			Value: msg.DistinctId,
 		}
 	}
 	if len(msg.ExceptionList) == 0 {
 		return FieldError{
-			Type:  "posthog.Exception",
+			Type:  "insights.Exception",
 			Name:  "ExceptionList",
 			Value: []ExceptionItem{},
 		}
@@ -102,14 +100,14 @@ func (msg Exception) Validate() error {
 func (msg ExceptionItem) Validate() error {
 	if msg.Type == "" {
 		return FieldError{
-			Type:  "posthog.Exception",
+			Type:  "insights.Exception",
 			Name:  "Type",
 			Value: msg.Type,
 		}
 	}
 	if msg.Value == "" {
 		return FieldError{
-			Type:  "posthog.Exception",
+			Type:  "insights.Exception",
 			Name:  "Value",
 			Value: msg.Value,
 		}

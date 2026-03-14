@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"time"
@@ -74,7 +74,7 @@ type Capture struct {
 	// This field is exported for serialization purposes and shouldn't be set by
 	// the application, its value is always overwritten by the library.
 	Type string
-	// You don't usually need to specify this field - Posthog will generate it automatically.
+	// You don't usually need to specify this field - Insights will generate it automatically.
 	// Use it only when necessary - for example, to prevent duplicate events.
 	Uuid             string
 	DistinctId       string
@@ -92,7 +92,7 @@ func (msg Capture) internal() {
 func (msg Capture) Validate() error {
 	if len(msg.Event) == 0 {
 		return FieldError{
-			Type:  "posthog.Capture",
+			Type:  "insights.Capture",
 			Name:  "Event",
 			Value: msg.Event,
 		}
@@ -100,7 +100,7 @@ func (msg Capture) Validate() error {
 
 	if len(msg.DistinctId) == 0 {
 		return FieldError{
-			Type:  "posthog.Capture",
+			Type:  "insights.Capture",
 			Name:  "DistinctId",
 			Value: msg.DistinctId,
 		}

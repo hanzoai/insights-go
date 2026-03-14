@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 // Properties is used to represent properties in messages that support it.
 // It is a free-form object so the application can set any value it sees fit but
@@ -6,11 +6,11 @@ package posthog
 // common fields.
 // Here's a quick example of how this type is meant to be used:
 //
-//	posthog.Page{
+//	insights.Capture{
 //		DistinctId: "0123456789",
-//		Properties: posthog.NewProperties()
-//			.Set("revenue", 10.0)
-//			.Set("currency", "USD"),
+//		Properties: insights.NewProperties().
+//			Set("revenue", 10.0).
+//			Set("currency", "USD"),
 //	}
 type Properties map[string]interface{}
 

@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"net/http"
@@ -31,7 +31,7 @@ type Config struct {
 	// but it's not required for feature flags.  If you don't have a personal API key,
 	// you can leave this field empty, and all of the relevant feature flag evaluation
 	// methods will still work.
-	// Information on how to get a personal API key: https://posthog.com/docs/api/overview
+	// Information on how to get a personal API key: https://insights.hanzo.ai/docs/api/overview
 	PersonalApiKey string
 
 	// DisableGeoIP will disable GeoIP lookup for events and when fetching feature flags
@@ -53,7 +53,7 @@ type Config struct {
 	NextFeatureFlagsPollingTick func() time.Duration
 
 	// Flag to enable historical migration
-	// See more in our migration docs: https://posthog.com/docs/migrate
+	// See more in our migration docs: https://insights.hanzo.ai/docs/migrate
 	HistoricalMigration bool
 
 	// The HTTP transport used by the client, this allows an application to
@@ -137,17 +137,17 @@ type Config struct {
 }
 
 // GetDisableGeoIP instructs the client to set $geoip_disable on event properties or feature flag requests.
-// It is on by default as Go is mainly used on server side and to be compatible with posthog-python.
+// It is on by default as Go is mainly used on server side.
 func (c Config) GetDisableGeoIP() bool {
 	return c.DisableGeoIP == nil || *c.DisableGeoIP
 }
 
 const (
-	SDKName = "posthog-go"
+	SDKName = "insights-go"
 
 	// DefaultEndpoint constant sets the default endpoint to which client instances send
 	// messages if none was explicitly set.
-	DefaultEndpoint = "https://app.posthog.com"
+	DefaultEndpoint = "https://insights.hanzo.ai"
 
 	// DefaultInterval constant sets the default flush interval used by client instances if
 	// none was explicitly set.

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/orian/flakyhttp"
-	posthog "github.com/hanzoai/insights-go"
+	insights "github.com/hanzoai/insights-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -57,9 +57,9 @@ func TestTCPDropRecovery(t *testing.T) {
 
 			callback := newTestCallback(t)
 
-			client, err := posthog.NewWithConfig(
+			client, err := insights.NewWithConfig(
 				"test-api-key",
-				posthog.Config{
+				insights.Config{
 					Endpoint: url,
 					Transport: &timeoutTransport{
 						rt:      http.DefaultTransport,
@@ -68,13 +68,13 @@ func TestTCPDropRecovery(t *testing.T) {
 					RetryAfter: func(i int) time.Duration { return time.Millisecond },
 					Interval:   10 * time.Millisecond,
 					BatchSize:  1,
-					Logger:     posthog.StdLogger(log.New(os.Stderr, "[posthog] ", log.LstdFlags), true),
+					Logger:     insights.StdLogger(log.New(os.Stderr, "[insights] ", log.LstdFlags), true),
 					Callback:   callback,
 				},
 			)
 			require.NoError(t, err, "Failed to create client")
 
-			err = client.Enqueue(posthog.Capture{
+			err = client.Enqueue(insights.Capture{
 				DistinctId: "user1",
 				Event:      "tcp_drop_recovery_test",
 			})
@@ -153,9 +153,9 @@ func TestTCPDropFailure(t *testing.T) {
 
 			callback := newTestCallback(t)
 
-			client, err := posthog.NewWithConfig(
+			client, err := insights.NewWithConfig(
 				"test-api-key",
-				posthog.Config{
+				insights.Config{
 					Endpoint: url,
 					Transport: &timeoutTransport{
 						rt:      http.DefaultTransport,
@@ -164,13 +164,13 @@ func TestTCPDropFailure(t *testing.T) {
 					Interval:   50 * time.Millisecond,
 					BatchSize:  1,
 					RetryAfter: func(i int) time.Duration { return time.Millisecond },
-					Logger:     posthog.StdLogger(log.New(os.Stderr, "[posthog] ", log.LstdFlags), true),
+					Logger:     insights.StdLogger(log.New(os.Stderr, "[insights] ", log.LstdFlags), true),
 					Callback:   callback,
 				},
 			)
 			require.NoError(t, err, "Failed to create client")
 
-			err = client.Enqueue(posthog.Capture{
+			err = client.Enqueue(insights.Capture{
 				DistinctId: "user1",
 				Event:      "tcp_drop_failure_test",
 			})

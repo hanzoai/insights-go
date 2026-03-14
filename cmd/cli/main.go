@@ -6,7 +6,7 @@ import (
 	"os"
 
 	json "github.com/goccy/go-json"
-	"github.com/hanzoai/insights-go"
+	insights "github.com/hanzoai/insights-go"
 	"github.com/urfave/cli"
 )
 
@@ -19,13 +19,13 @@ func main() {
 	var alias string
 
 	app := cli.NewApp()
-	app.Name = "posthog"
-	app.Usage = "Call the PostHog API"
+	app.Name = "insights"
+	app.Usage = "Call the Insights API"
 
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:        "apiKey",
-			Usage:       "The PostHog API Key",
+			Usage:       "The Insights API Key",
 			Destination: &apiKey,
 		},
 		&cli.StringFlag{
@@ -59,29 +59,29 @@ func main() {
 
 		callback := callback(make(chan error, 1))
 
-		client, err := posthog.NewWithConfig(apiKey, posthog.Config{
+		client, err := insights.NewWithConfig(apiKey, insights.Config{
 			BatchSize: 1,
 			Callback:  callback,
 		})
 		if err != nil {
-			fmt.Println("could not initialize posthog client", err)
+			fmt.Println("could not initialize insights client", err)
 			os.Exit(1)
 		}
 
 		switch operationType {
 		case "capture":
-			client.Enqueue(posthog.Capture{
+			client.Enqueue(insights.Capture{
 				DistinctId: distinctId,
 				Event:      event,
 				Properties: parseJSON(properties),
 			})
 		case "alias":
-			client.Enqueue(posthog.Alias{
+			client.Enqueue(insights.Alias{
 				DistinctId: distinctId,
 				Alias:      alias,
 			})
 		case "identify":
-			client.Enqueue(posthog.Identify{
+			client.Enqueue(insights.Identify{
 				DistinctId: distinctId,
 				Properties: parseJSON(properties),
 			})
@@ -112,15 +112,15 @@ func parseJSON(v string) map[string]interface{} {
 	return m
 }
 
-// callback implements the posthog.Callback interface. It is used by the CLI
+// callback implements the insights.Callback interface. It is used by the CLI
 // to wait for events to be uploaded before exiting.
 type callback chan error
 
-func (c callback) Failure(m posthog.APIMessage, err error) {
+func (c callback) Failure(m insights.APIMessage, err error) {
 	fmt.Printf("could not upload message %v due to %v\n", m, err)
 	c <- err
 }
 
-func (c callback) Success(_ posthog.APIMessage) {
+func (c callback) Success(_ insights.APIMessage) {
 	c <- nil
 }

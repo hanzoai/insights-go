@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/orian/flakyhttp"
-	posthog "github.com/hanzoai/insights-go"
+	insights "github.com/hanzoai/insights-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -70,7 +70,7 @@ func TestRetryBehavior(t *testing.T) {
 
 			callback := newTestCallback(t)
 
-			config := posthog.Config{
+			config := insights.Config{
 				Endpoint: url,
 				Transport: &timeoutTransport{
 					rt:      http.DefaultTransport,
@@ -78,22 +78,22 @@ func TestRetryBehavior(t *testing.T) {
 				},
 				Interval:   1 * time.Millisecond,
 				BatchSize:  1,
-				Logger:     posthog.StdLogger(log.New(os.Stderr, "[posthog] ", log.LstdFlags), true),
+				Logger:     insights.StdLogger(log.New(os.Stderr, "[insights] ", log.LstdFlags), true),
 				Callback:   callback,
 				RetryAfter: func(i int) time.Duration { return time.Millisecond },
 			}
 
 			if tc.disableRetry {
-				config.MaxRetries = posthog.Ptr[int](0)
+				config.MaxRetries = insights.Ptr[int](0)
 			}
 			if tc.retryAfter != nil {
 				config.RetryAfter = tc.retryAfter
 			}
 
-			client, err := posthog.NewWithConfig("test-api-key", config)
+			client, err := insights.NewWithConfig("test-api-key", config)
 			require.NoError(t, err)
 
-			err = client.Enqueue(posthog.Capture{
+			err = client.Enqueue(insights.Capture{
 				DistinctId: "user1",
 				Event:      "test_event",
 			})

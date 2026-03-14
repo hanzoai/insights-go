@@ -3,11 +3,11 @@
   "batch": [
     {
       "event": "$create_alias",
-      "library": "posthog-go",
+      "library": "insights-go",
       "library_version": "1.0.0",
       "properties": {
         "$geoip_disable": true,
-        "$lib": "posthog-go",
+        "$lib": "insights-go",
         "$lib_version": "1.0.0",
         "alias": "A",
         "distinct_id": "B"

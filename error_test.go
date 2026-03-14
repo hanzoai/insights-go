@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import "testing"
 
@@ -9,7 +9,7 @@ func TestConfigError(t *testing.T) {
 		Value:  42,
 	}
 
-	if s := e.Error(); s != "posthog.NewWithConfig: testing (posthog.Config.Answer: 42)" {
+	if s := e.Error(); s != "insights.NewWithConfig: testing (insights.Config.Answer: 42)" {
 		t.Error("invalid error message returned by config error:", s)
 	}
 }

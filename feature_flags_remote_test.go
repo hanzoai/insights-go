@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"context"
@@ -30,12 +30,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err != nil {
@@ -70,12 +70,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("variant-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err != nil {
@@ -95,12 +95,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("missing-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err != nil {
@@ -129,12 +129,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err != nil {
@@ -163,12 +163,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err != nil {
@@ -185,12 +185,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err == nil {
@@ -213,12 +213,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err == nil {
@@ -237,12 +237,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err == nil {
@@ -251,12 +251,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 	})
 
 	t.Run("returns error when server is unreachable", func(t *testing.T) {
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: "http://localhost:1", // Unreachable port
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err == nil {
@@ -326,12 +326,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		personProps := NewProperties().Set("email", "test@example.com")
 		c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, personProps, nil)
 
@@ -351,12 +351,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		groups := Groups{"company": "posthog"}
 		c.getFeatureFlagFromRemote("test-flag", "user-123", nil, groups, nil, nil)
 
@@ -376,12 +376,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		deviceId := "device-456"
 		c.getFeatureFlagFromRemote("test-flag", "user-123", &deviceId, nil, nil, nil)
 
@@ -401,12 +401,12 @@ func TestGetFeatureFlagFromRemote(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if requestData.DeviceId != nil {
@@ -635,12 +635,12 @@ func TestFailedFlagShouldNotReturnValue(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err != nil {
@@ -685,12 +685,12 @@ func TestFailedFlagShouldNotReturnValue(t *testing.T) {
 		}))
 		defer server.Close()
 
-		posthog, _ := NewWithConfig("test-api-key", Config{
+		cli, _ := NewWithConfig("test-api-key", Config{
 			Endpoint: server.URL,
 		})
-		defer posthog.Close()
+		defer cli.Close()
 
-		c := posthog.(*client)
+		c := cli.(*client)
 		result := c.getFeatureFlagFromRemote("test-flag", "user-123", nil, nil, nil, nil)
 
 		if result.Err != nil {

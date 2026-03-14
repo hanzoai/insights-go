@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"bytes"
@@ -39,9 +39,9 @@ type EnqueueClient interface {
 	// This is the main method you'll be using, a typical flow would look like
 	// this:
 	//
-	//	client := posthog.New(apiKey)
+	//	client := insights.New(apiKey)
 	//	...
-	//	client.Enqueue(posthog.Capture{ ... })
+	//	client.Enqueue(insights.Capture{ ... })
 	//	...
 	//	client.Close()
 	//
@@ -51,7 +51,7 @@ type EnqueueClient interface {
 	Enqueue(Message) error
 }
 
-// Client interface is the main API exposed by the posthog package.
+// Client interface is the main API exposed by the insights package.
 // Values that satisfy this interface are returned by the client constructors
 // provided by the package and provide a way to send messages via the HTTP API.
 type Client interface {
@@ -446,7 +446,7 @@ func (c *client) IsFeatureEnabled(flagConfig FeatureFlagPayload) (interface{}, e
 func (c *client) ReloadFeatureFlags() error {
 	if c.featureFlagsPoller == nil {
 		err := fmt.Errorf("cannot use feature flags: %w", ErrNoPersonalAPIKey)
-		c.debugf(err.Error())
+		c.debugf("%s", err.Error())
 		return err
 	}
 	c.featureFlagsPoller.ForceReload()
@@ -627,7 +627,7 @@ func (c *client) GetRemoteConfigPayload(flagKey string) (string, error) {
 func (c *client) GetFeatureFlags() ([]FeatureFlag, error) {
 	if c.featureFlagsPoller == nil {
 		err := fmt.Errorf("cannot use feature flags: %w", ErrNoPersonalAPIKey)
-		c.Logger.Debugf(err.Error())
+		c.Logger.Debugf("%s", err.Error())
 		return nil, err
 	}
 	return c.featureFlagsPoller.GetFeatureFlags()
@@ -1128,7 +1128,7 @@ func (c *client) getFeatureVariants(distinctId string, groups Groups, personProp
 func (c *client) getFeatureVariantsWithOptions(distinctId string, groups Groups, personProperties Properties, groupProperties map[string]Properties, options *SendFeatureFlagsOptions) (map[string]interface{}, error) {
 	if c.featureFlagsPoller == nil {
 		errorMessage := "specifying a PersonalApiKey is required for using feature flags"
-		c.Errorf(errorMessage)
+		c.Errorf("%s", errorMessage)
 		return nil, errors.New(errorMessage)
 	}
 
@@ -1171,7 +1171,7 @@ func (c *client) makeRemoteConfigRequest(flagKey string) (string, error) {
 
 	req.Header.Set("Authorization", "Bearer "+c.PersonalApiKey)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "posthog-go/"+Version)
+	req.Header.Set("User-Agent", SDKName+"/"+Version)
 
 	res, err := c.http.Do(req)
 	if err != nil {
@@ -1202,7 +1202,7 @@ func (c *client) isFeatureFlagsQuotaLimited(flagsResponse *FlagsResponse) bool {
 	}
 	for _, limitedFeature := range flagsResponse.QuotaLimited {
 		if limitedFeature == "feature_flags" {
-			c.Logger.Warnf("[FEATURE FLAGS] PostHog feature flags quota limited. Learn more about billing limits at https://posthog.com/docs/billing/limits-alerts")
+			c.Logger.Warnf("[FEATURE FLAGS] feature flags quota limited")
 			return true
 		}
 	}

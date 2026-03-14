@@ -1,4 +1,4 @@
-package posthog
+package insights
 
 import (
 	"time"
@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Values implementing this interface are used by posthog clients to notify
+// Values implementing this interface are used by insights clients to notify
 // the application when a message send succeeded or failed.
 //
 // Callback methods are called by a client's internal goroutines, there are no
@@ -28,11 +28,11 @@ type Callback interface {
 	Failure(APIMessage, error)
 }
 
-// This interface is used to represent posthog objects that can be sent via
+// This interface is used to represent insights objects that can be sent via
 // a client.
 //
-// Types like posthog.Capture, posthog.Alias, etc... implement this interface
-// and therefore can be passed to the posthog.Client.Send method.
+// Types like insights.Capture, insights.Alias, etc... implement this interface
+// and therefore can be passed to the insights.Client.Enqueue method.
 type Message interface {
 
 	// Validate validates the internal structure of the message, the method must return

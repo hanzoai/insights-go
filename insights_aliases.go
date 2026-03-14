@@ -1,10 +1,10 @@
-package posthog
+package insights
 
-// Insights is an alias for Client - use Insights for new code.
-// The underlying type is the posthog Client interface.
+// Insights is an alias for Client, provided for convenience.
+// Both insights.Insights and insights.Client refer to the same interface.
 type Insights = Client
 
-// InsightsConfig is an alias for Config - use InsightsConfig for new code.
+// InsightsConfig is an alias for Config, provided for convenience.
 type InsightsConfig = Config
 
 // NewInsights creates a new Insights client. Equivalent to New.
