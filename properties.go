@@ -14,10 +14,12 @@ package insights
 //	}
 type Properties map[string]interface{}
 
+// NewProperties creates an empty Properties map for fluent construction.
 func NewProperties() Properties {
 	return make(Properties, 10)
 }
 
+// Set assigns a property value and returns the receiver.
 func (p Properties) Set(name string, value interface{}) Properties {
 	p[name] = value
 	return p

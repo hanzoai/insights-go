@@ -10,6 +10,7 @@ require (
 	github.com/orian/flakyhttp v0.1.1
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli v1.22.17
+	golang.org/x/sys v0.21.0
 )
 
 require (
