@@ -14,7 +14,13 @@ type SlogCaptureHandler struct {
 	cfg    captureConfig
 }
 
-// NewSlogCaptureHandler creates a new log handler wrapper.
+// NewSlogCaptureHandler wraps next and mirrors qualifying slog records to PostHog.
+//
+// The next parameter receives all records as your normal handler. The client
+// parameter receives captured Exception messages. The opts parameters customize
+// capture level, distinct ID resolution, stack traces, descriptions, fingerprints,
+// and extra properties.
+//
 // You typically wrap your existing handler:
 //
 //	client, err := insights.NewWithConfig(...)
@@ -33,6 +39,7 @@ func NewSlogCaptureHandler(next slog.Handler, client EnqueueClient, opts ...Slog
 	return &SlogCaptureHandler{next: next, client: client, cfg: cfg}
 }
 
+// Enabled reports whether either the wrapped handler or PostHog capture wants records at level.
 func (h *SlogCaptureHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	// Ensure we get called for capture-level records even if the base doesn't log them.
 	if level >= h.cfg.minCaptureLevel {
@@ -42,6 +49,8 @@ func (h *SlogCaptureHandler) Enabled(ctx context.Context, level slog.Level) bool
 	return h.next.Enabled(ctx, level)
 }
 
+// Handle forwards the record to the wrapped handler and captures qualifying records as exceptions.
+// Enqueue errors are ignored so logging remains non-intrusive.
 func (h *SlogCaptureHandler) Handle(ctx context.Context, r slog.Record) error {
 	// Always forward to the wrapped handler first.
 	var err error
@@ -69,12 +78,14 @@ func (h *SlogCaptureHandler) Handle(ctx context.Context, r slog.Record) error {
 			},
 		},
 		ExceptionFingerprint: h.cfg.fingerprint(ctx, r),
+		Properties:           h.cfg.properties(ctx, r),
 	}
-	_ = h.client.Enqueue(ex) // ignore enqueue error to keep logging safe
+	_ = enqueueWithContext(ctx, h.client, ex) // ignore enqueue error to keep logging safe
 
 	return err
 }
 
+// WithAttrs returns a handler with attrs applied to the wrapped handler.
 func (h *SlogCaptureHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &SlogCaptureHandler{
 		next:   h.next.WithAttrs(attrs),
@@ -83,6 +94,7 @@ func (h *SlogCaptureHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	}
 }
 
+// WithGroup returns a handler with name applied to the wrapped handler's group.
 func (h *SlogCaptureHandler) WithGroup(name string) slog.Handler {
 	return &SlogCaptureHandler{
 		next:   h.next.WithGroup(name),
@@ -91,12 +103,30 @@ func (h *SlogCaptureHandler) WithGroup(name string) slog.Handler {
 	}
 }
 
+// SlogAttrsAsProperties is a convenience implementation of the fn passed to
+// WithPropertiesFn. It copies every slog.Record attribute into a Properties
+// map, so log fields flow onto the captured exception event verbatim.
+//
+// Usage: posthog.WithPropertiesFn(posthog.SlogAttrsAsProperties)
+//
+// Note: this ships all attrs to PostHog — make sure none contain sensitive
+// data, or write a filtering fn instead.
+func SlogAttrsAsProperties(_ context.Context, r slog.Record) Properties {
+	props := NewProperties()
+	r.Attrs(func(a slog.Attr) bool {
+		props.Set(a.Key, a.Value.Any())
+		return true
+	})
+	return props
+}
+
 // DescriptionExtractor defines the interface for extracting a human-readable
 // description from a slog.Record for use in exception capture.
 //
 // Implementations should always return a non-empty string; returning an empty
 // string will prevent the error from being captured.
 type DescriptionExtractor interface {
+	// ExtractDescription returns the ExceptionItem.Value to use for a slog record.
 	ExtractDescription(r slog.Record) string
 }
 
@@ -107,10 +137,13 @@ type DescriptionExtractor interface {
 // The first matching attribute with an error value is returned as the
 // description. If no matching error is found, the Fallback is returned.
 type ErrorExtractor struct {
+	// ErrorKeys are attribute keys to inspect for error values, case-insensitively.
 	ErrorKeys []string
-	Fallback  string
+	// Fallback is returned when no matching error attribute is found.
+	Fallback string
 }
 
+// ExtractDescription returns the first matching error string from the slog record or Fallback.
 func (e ErrorExtractor) ExtractDescription(r slog.Record) string {
 	var found error
 
