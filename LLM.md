@@ -1,7 +1,10 @@
-# insights-go — AI Assistant Context
+# insights-go
 
-# Hanzo Insights Go SDK
+Go client SDK for Hanzo Insights (product analytics) — `github.com/hanzoai/insights-go`. Event capture, user identify/alias, feature flags, and group/B2B analytics with batched delivery and retry/backoff. Based on the PostHog Go SDK.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/hanzoai/insights-go.svg)](https://pkg.go.dev/github.com/hanzoai/insights-go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/hanzoai/insights-go)](https://goreportcard.com/report/github.com/hanzoai/insights-go)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+Default endpoint `https://insights.hanzo.ai`; API key via `INSIGHTS_API_KEY`. `PersonalApiKey` enables local feature-flag evaluation.
+
+- Build/test: `make build`
+- Test only: `make test`
+
+Full docs: README.md
