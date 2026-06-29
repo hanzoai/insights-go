@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/hero.svg" alt="insights-go" width="880"></p>
+
 # Hanzo Insights Go SDK
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/hanzoai/insights-go.svg)](https://pkg.go.dev/github.com/hanzoai/insights-go)
