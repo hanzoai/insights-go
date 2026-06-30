@@ -1,6 +1,6 @@
 //go:build !linux && !darwin && !windows
 
-package posthog
+package insights
 
 import "runtime"
 

@@ -363,25 +363,25 @@ func featureFlagHandler(w http.ResponseWriter, r *http.Request) {
 	_ = req.DisableGeoIP
 
 	// Convert groups/properties to SDK types
-	var groups posthog.Groups
+	var groups insights.Groups
 	if req.Groups != nil {
-		groups = posthog.Groups(req.Groups)
+		groups = insights.Groups(req.Groups)
 	}
 
-	var personProperties posthog.Properties
+	var personProperties insights.Properties
 	if req.PersonProperties != nil {
-		personProperties = posthog.Properties(req.PersonProperties)
+		personProperties = insights.Properties(req.PersonProperties)
 	}
 
-	var groupProperties map[string]posthog.Properties
+	var groupProperties map[string]insights.Properties
 	if req.GroupProperties != nil {
-		groupProperties = make(map[string]posthog.Properties, len(req.GroupProperties))
+		groupProperties = make(map[string]insights.Properties, len(req.GroupProperties))
 		for k, v := range req.GroupProperties {
-			groupProperties[k] = posthog.Properties(v)
+			groupProperties[k] = insights.Properties(v)
 		}
 	}
 
-	value, err := client.GetFeatureFlag(posthog.FeatureFlagPayload{
+	value, err := client.GetFeatureFlag(insights.FeatureFlagPayload{
 		Key:                 req.Key,
 		DistinctId:          req.DistinctID,
 		Groups:              groups,
