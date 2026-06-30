@@ -1,6 +1,6 @@
 //go:build linux
 
-package posthog
+package insights
 
 import (
 	"os"

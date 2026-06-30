@@ -1,6 +1,6 @@
 //go:build darwin
 
-package posthog
+package insights
 
 import (
 	"os/exec"
