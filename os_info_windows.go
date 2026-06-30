@@ -1,6 +1,6 @@
 //go:build windows
 
-package posthog
+package insights
 
 import (
 	"fmt"

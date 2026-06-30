@@ -39,14 +39,14 @@ func TestErrorTrackingThroughEnqueueing(projectAPIKey, endpoint string) {
 				return
 			}
 
-			exceptionWithProps := posthog.Exception{
+			exceptionWithProps := insights.Exception{
 				DistinctId: "distinct-id",
 				Timestamp:  time.Now(),
-				Properties: posthog.Properties{
+				Properties: insights.Properties{
 					"environment": "production",
 					"retry_count": 3,
 				},
-				ExceptionList: []posthog.ExceptionItem{
+				ExceptionList: []insights.ExceptionItem{
 					{Type: "Enqueued error with custom props", Value: "Error Description"},
 				},
 			}
@@ -73,7 +73,7 @@ func TestErrorTrackingThroughLogHandler(projectAPIKey, endpoint string) {
 			// for demo purposes, real applications should likely pull this value from the context.
 			return "my-user-id"
 		}),
-		posthog.WithPropertiesFn(posthog.SlogAttrsAsProperties),
+		insights.WithPropertiesFn(insights.SlogAttrsAsProperties),
 	))
 
 	done := time.After(3 * time.Second)

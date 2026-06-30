@@ -4,6 +4,7 @@ go 1.26.4
 
 require (
 	github.com/goccy/go-json v0.10.6
+	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/joho/godotenv v1.5.1
