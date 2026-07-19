@@ -1298,7 +1298,7 @@ func (c *client) send(pb preparedBatch) {
 
 // Upload serialized batch message.
 func (c *client) upload(ctx context.Context, b []byte) error {
-	url := c.Endpoint + "/batch/"
+	url := c.Endpoint + capturePath
 	body := b
 
 	if c.Compression == CompressionGzip {

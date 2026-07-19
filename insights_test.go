@@ -232,7 +232,7 @@ func TestNewWithConfig_TrimsWhitespaceSensitiveInputsInRequests(t *testing.T) {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"flags": [], "group_type_mapping": {}}`))
-		case r.URL.Path == "/batch/":
+		case r.URL.Path == "/v1/insights/e":
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				t.Errorf("Failed to read batch body: %v", err)
@@ -1404,7 +1404,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/flags/" {
+				if r.URL.Path == "/v1/flags" {
 					w.WriteHeader(http.StatusOK)
 					w.Write([]byte(tt.mockResponse))
 				} else {
@@ -1439,7 +1439,7 @@ func TestDeviceIdInFlagsRequest(t *testing.T) {
 	t.Run("GetFeatureFlag passes device_id when provided", func(t *testing.T) {
 		var requestData FlagsRequestData
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+			if r.URL.Path == "/v1/flags" {
 				body, _ := io.ReadAll(r.Body)
 				json.Unmarshal(body, &requestData)
 				w.Write([]byte(`{"featureFlags": {"test-flag": true}}`))
@@ -1472,7 +1472,7 @@ func TestDeviceIdInFlagsRequest(t *testing.T) {
 	t.Run("GetFeatureFlag omits device_id when nil", func(t *testing.T) {
 		var receivedBody string
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+			if r.URL.Path == "/v1/flags" {
 				body, _ := io.ReadAll(r.Body)
 				receivedBody = string(body)
 				w.Write([]byte(`{"featureFlags": {"test-flag": true}}`))
@@ -1501,7 +1501,7 @@ func TestDeviceIdInFlagsRequest(t *testing.T) {
 	t.Run("GetAllFlags passes device_id when provided", func(t *testing.T) {
 		var requestData FlagsRequestData
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+			if r.URL.Path == "/v1/flags" {
 				body, _ := io.ReadAll(r.Body)
 				json.Unmarshal(body, &requestData)
 				w.Write([]byte(`{"featureFlags": {"test-flag": true}}`))
@@ -1533,7 +1533,7 @@ func TestDeviceIdInFlagsRequest(t *testing.T) {
 	t.Run("GetFeatureFlagPayload passes device_id when provided", func(t *testing.T) {
 		var requestData FlagsRequestData
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+			if r.URL.Path == "/v1/flags" {
 				body, _ := io.ReadAll(r.Body)
 				json.Unmarshal(body, &requestData)
 				w.Write([]byte(`{"featureFlags": {"test-flag": true}, "featureFlagPayloads": {"test-flag": "payload-value"}}`))
@@ -1568,7 +1568,7 @@ func TestDeviceIdInFlagsRequest(t *testing.T) {
 		received := make(chan struct{})
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch {
-			case r.URL.Path == "/flags" || r.URL.Path == "/flags/":
+			case r.URL.Path == "/v1/flags":
 				body, _ := io.ReadAll(r.Body)
 				if err := json.Unmarshal(body, &requestData); err != nil {
 					t.Errorf("Failed to parse request body: %v", err)
@@ -1578,7 +1578,7 @@ func TestDeviceIdInFlagsRequest(t *testing.T) {
 			case strings.HasPrefix(r.URL.Path, "/flags/definitions"):
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{"flags":[]}`))
-			case strings.HasPrefix(r.URL.Path, "/batch"):
+			case strings.HasPrefix(r.URL.Path, "/v1/insights/e"):
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{}`))
 			default:
@@ -1623,9 +1623,9 @@ func TestDeviceIdInFlagsRequest(t *testing.T) {
 
 func TestGetFeatureFlagPayloadWithNoPersonalApiKey(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+		if r.URL.Path == "/v1/flags" {
 			w.Write([]byte(fixture("test-flags-v3.json")))
-		} else if !strings.HasPrefix(r.URL.Path, "/batch") {
+		} else if !strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			t.Errorf("client called an endpoint it shouldn't have: %s", r.URL.Path)
 		}
 	}))
@@ -1755,7 +1755,7 @@ func TestGetFeatureFlagPayloadWithNoPersonalApiKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Check request method and path
-				if r.Method != "POST" || r.URL.Path != "/flags/" {
+				if r.Method != "POST" || r.URL.Path != "/v1/flags" {
 					t.Errorf("Expected POST /flags/, got %s %s", r.Method, r.URL.Path)
 				}
 
@@ -1809,9 +1809,9 @@ func TestGetFeatureFlagPayloadWithNoPersonalApiKey(t *testing.T) {
 
 func TestGetFeatureFlagWithNoPersonalApiKey(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+		if r.URL.Path == "/v1/flags" {
 			w.Write([]byte(fixture("test-flags-v3.json")))
-		} else if !strings.HasPrefix(r.URL.Path, "/batch") {
+		} else if !strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			t.Errorf("client called an endpoint it shouldn't have: %s", r.URL.Path)
 		}
 	}))
@@ -1984,7 +1984,7 @@ func TestGetFeatureFlagWithNoPersonalApiKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Check request method and path
-				if r.Method != "POST" || r.URL.Path != "/flags/" {
+				if r.Method != "POST" || r.URL.Path != "/v1/flags" {
 					t.Errorf("Expected POST /flags/, got %s %s", r.Method, r.URL.Path)
 				}
 
@@ -2121,7 +2121,7 @@ func TestGetAllFeatureFlagsWithNoPersonalApiKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Check request method and path
-				if r.Method != "POST" || r.URL.Path != "/flags/" {
+				if r.Method != "POST" || r.URL.Path != "/v1/flags" {
 					t.Errorf("Expected POST /flags/, got %s %s", r.Method, r.URL.Path)
 				}
 
@@ -2176,7 +2176,7 @@ func TestGetAllFeatureFlagsWithNoPersonalApiKey(t *testing.T) {
 
 func TestGetFeatureFlagPayloadWithPersonalKey(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+		if r.URL.Path == "/v1/flags" {
 			t.Fatal("expected local evaluations endpoint to be called")
 		}
 		w.Write([]byte(fixture("test-api-feature-flag.json")))
@@ -2206,7 +2206,7 @@ func TestGetFeatureFlagPayloadWithPersonalKey(t *testing.T) {
 func TestGetFeatureFlagPayloadWithPersonalKey_LocalComputationFailure(t *testing.T) {
 	apiCalls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if apiCalls == 0 && (r.URL.Path == "/flags" || r.URL.Path == "/flags/") {
+		if apiCalls == 0 && r.URL.Path == "/v1/flags" {
 			t.Fatal("expected local evaluations endpoint to be called first")
 		} else if apiCalls == 1 && strings.HasPrefix(r.URL.Path, "/flags/definitions") {
 			t.Fatal("expected flags endpoint to be called second")
@@ -2275,11 +2275,11 @@ func TestSimpleFlagCalculation(t *testing.T) {
 
 func TestComplexFlag(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+		if r.URL.Path == "/v1/flags" {
 			w.Write([]byte(fixture("test-flags-v3.json")))
 		} else if strings.HasPrefix(r.URL.Path, "/flags/definitions") {
 			w.Write([]byte(fixture("test-api-feature-flag.json")))
-		} else if !strings.HasPrefix(r.URL.Path, "/batch") {
+		} else if !strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			t.Errorf("client called an endpoint it shouldn't have")
 		}
 	}))
@@ -2327,11 +2327,11 @@ func TestComplexFlag(t *testing.T) {
 
 func TestMultiVariateFlag(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+		if r.URL.Path == "/v1/flags" {
 			w.Write([]byte(fixture("test-flags-v3.json")))
 		} else if strings.HasPrefix(r.URL.Path, "/flags/definitions") {
 			w.Write([]byte("{}"))
-		} else if !strings.HasPrefix(r.URL.Path, "/batch") {
+		} else if !strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			t.Errorf("client called an endpoint it shouldn't have")
 		}
 	}))
@@ -2379,11 +2379,11 @@ func TestMultiVariateFlag(t *testing.T) {
 
 func TestDisabledFlag(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+		if r.URL.Path == "/v1/flags" {
 			w.Write([]byte(fixture("test-flags-v3.json")))
 		} else if strings.HasPrefix(r.URL.Path, "/flags/definitions") {
 			w.Write([]byte("{}"))
-		} else if !strings.HasPrefix(r.URL.Path, "/batch") {
+		} else if !strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			t.Errorf("client called an endpoint it shouldn't have")
 		}
 	}))
@@ -2617,7 +2617,7 @@ func TestSendFeatureFlagsHelperMethods(t *testing.T) {
 func TestFeatureFlagQuotaLimits(t *testing.T) {
 	t.Run("flags endpoint quota limited", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+			if r.URL.Path == "/v1/flags" {
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{
 					"featureFlags": {"test-flag": true},
@@ -2678,7 +2678,7 @@ func TestFeatureFlagQuotaLimits(t *testing.T) {
 					"detail": "You have exceeded your feature flag request quota",
 					"code": "payment_required"
 				}`))
-			} else if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+			} else if r.URL.Path == "/v1/flags" {
 				// Mock the flags endpoint as well since it's used as fallback
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{

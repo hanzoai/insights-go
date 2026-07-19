@@ -3,6 +3,7 @@ package insights
 import (
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -138,9 +139,26 @@ func (c Config) GetDisableGeoIP() bool {
 const (
 	SDKName = "insights-go"
 
-	// DefaultEndpoint constant sets the default endpoint to which client instances send
-	// messages if none was explicitly set.
-	DefaultEndpoint = "https://insights.hanzo.ai"
+	// DefaultEndpoint is the default HOST events and flag requests are sent to when
+	// none is set explicitly (Config.Endpoint) or via EndpointEnvVar. It is the live
+	// Hanzo Cloud Go ingest (api.hanzo.ai), NOT the retired PostHog-OSS capture host
+	// (insights.hanzo.ai, replicas:0) — events posted there were black-holed.
+	// capturePath / flagsPath below are appended to it.
+	DefaultEndpoint = "https://api.hanzo.ai"
+
+	// EndpointEnvVar overrides DefaultEndpoint at runtime when Config.Endpoint is
+	// empty, so an operator can repoint ingest without a rebuild (regional/staging
+	// host). An explicit Config.Endpoint always wins over the env.
+	EndpointEnvVar = "INSIGHTS_ENDPOINT"
+
+	// capturePath is the cloud native ingest route the batch uploader POSTs to —
+	// the PostHog-compatible front door (cloud clients/analytics insightsIngest),
+	// which reads {api_key, batch:[...]}. Replaces PostHog's "/batch/".
+	capturePath = "/v1/insights/e"
+
+	// flagsPath is the cloud native flags engine route (cloud clients/flags:
+	// POST /v1/flags, /v1/flags/decide alias). Replaces PostHog's "/flags/".
+	flagsPath = "/v1/flags"
 
 	// DefaultInterval is the default flush interval used when Config.Interval is zero.
 	DefaultInterval = 5 * time.Second
@@ -169,8 +187,21 @@ const (
 )
 
 func (c *Config) normalize() {
-	c.Endpoint = strings.TrimSpace(c.Endpoint)
+	// TrimRight "/" so capturePath / flagsPath (both leading-slash) join without a
+	// double slash — a bare host never legitimately ends in "/", and Traefik matches
+	// the ingest path exactly, so "//v1/insights/e" would miss the route.
+	c.Endpoint = strings.TrimRight(strings.TrimSpace(c.Endpoint), "/")
 	c.PersonalApiKey = strings.TrimSpace(c.PersonalApiKey)
+}
+
+// endpointDefault resolves the ingest host when Config.Endpoint is unset: the
+// EndpointEnvVar override if present, else DefaultEndpoint. Trailing slashes are
+// trimmed for the same clean-join reason as normalize.
+func endpointDefault() string {
+	if v := strings.TrimRight(strings.TrimSpace(os.Getenv(EndpointEnvVar)), "/"); v != "" {
+		return v
+	}
+	return DefaultEndpoint
 }
 
 // Validate verifies that fields that don't have zero-values are set to valid values,
@@ -227,7 +258,7 @@ func makeConfig(c Config) Config {
 	c.normalize()
 
 	if len(c.Endpoint) == 0 {
-		c.Endpoint = DefaultEndpoint
+		c.Endpoint = endpointDefault()
 	}
 
 	if c.Interval == 0 {
