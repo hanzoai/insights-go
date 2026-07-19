@@ -159,7 +159,7 @@ func TestFlagDependenciesCircularDependency(t *testing.T) {
 				],
 				"group_type_mapping": {}
 			}`))
-		} else if strings.HasPrefix(r.URL.Path, "/flags/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/flags") {
 			w.Write([]byte(`{"featureFlags": {}}`))
 		}
 	}))
@@ -221,7 +221,7 @@ func TestFlagDependenciesMissingFlag(t *testing.T) {
 				],
 				"group_type_mapping": {}
 			}`))
-		} else if strings.HasPrefix(r.URL.Path, "/flags/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/flags") {
 			w.Write([]byte(`{"featureFlags": {}}`))
 		}
 	}))
@@ -481,7 +481,7 @@ func TestFlagDependenciesMalformedChain(t *testing.T) {
 				],
 				"group_type_mapping": {}
 			}`))
-		} else if strings.HasPrefix(r.URL.Path, "/flags/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/flags") {
 			w.Write([]byte(`{"featureFlags": {}}`))
 		}
 	}))
@@ -605,7 +605,7 @@ func TestMultiLevelMultivariateDependencyChain(t *testing.T) {
 				],
 				"group_type_mapping": {}
 			}`))
-		} else if strings.HasPrefix(r.URL.Path, "/flags/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/flags") {
 			w.Write([]byte(`{"featureFlags": {}}`))
 		}
 	}))
