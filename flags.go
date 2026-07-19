@@ -205,9 +205,9 @@ type flagsClient struct {
 func newFlagsClient(apiKey string, endpoint string, httpClient http.Client,
 	featureFlagRequestTimeout time.Duration, logger Logger) (*flagsClient, error) {
 
-	// Try v2 endpoint first
-	flagsEndpoint := "flags/?v=2"
-	flagsEndpointURL, err := url.Parse(endpoint + "/" + flagsEndpoint)
+	// Native cloud flags engine (cloud clients/flags: POST /v1/flags). ?v=2 keeps
+	// the v2 response-shape hint; the engine ignores unknown query params.
+	flagsEndpointURL, err := url.Parse(endpoint + flagsPath + "?v=2")
 	if err != nil {
 		return nil, fmt.Errorf("creating url: %v", err)
 	}

@@ -72,7 +72,7 @@ func newMixedTargetingServer(t *testing.T, localFlagsJSON string, decideCalls *a
 			w.Write([]byte(localFlagsJSON))
 			return
 		}
-		if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
+		if r.URL.Path == "/v1/flags" {
 			if decideCalls != nil {
 				decideCalls.Add(1)
 			}
