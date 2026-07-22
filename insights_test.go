@@ -482,7 +482,23 @@ func ExampleCapture() {
 		SendFeatureFlags: SendFeatureFlags(false),
 	})
 
-	fmt.Printf("%s\n", <-body)
+	// Normalize away host-specific system-context props ($os*, $go_version) so the
+	// example output is stable across operating systems and Go toolchains; the full
+	// payload (system context included) is asserted in TestEnqueue/capture.
+	var payload map[string]interface{}
+	if err := json.Unmarshal(<-body, &payload); err != nil {
+		panic(err)
+	}
+	for _, ev := range payload["batch"].([]interface{}) {
+		props := ev.(map[string]interface{})["properties"].(map[string]interface{})
+		for k := range props {
+			if k == "$go_version" || strings.HasPrefix(k, "$os") {
+				delete(props, k)
+			}
+		}
+	}
+	pretty, _ := json.MarshalIndent(payload, "", "  ")
+	fmt.Printf("%s\n", pretty)
 	// Output:
 	// {
 	//   "api_key": "Csyjlnlun3OzyNJAafdlv",
@@ -497,7 +513,6 @@ func ExampleCapture() {
 	//         "$lib": "insights-go",
 	//         "$lib_version": "1.0.0",
 	//         "application": "Insights Go",
-	//         "platform": "macos",
 	//         "version": "1.0.0"
 	//       },
 	//       "send_feature_flags": false,
