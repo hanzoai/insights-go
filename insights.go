@@ -538,9 +538,8 @@ func (c *client) IsFeatureEnabled(flagConfig FeatureFlagPayload) (interface{}, e
 
 func (c *client) ReloadFeatureFlags() error {
 	if c.featureFlagsPoller == nil {
-		err := fmt.Errorf("cannot use feature flags: %w", ErrNoPersonalAPIKey)
-		c.debugf("%s", err.Error())
-		return err
+		c.warnPersonalAPIKeyMissing("ReloadFeatureFlags")
+		return ErrNoPersonalAPIKey
 	}
 	c.featureFlagsPoller.ForceReload()
 	return nil
