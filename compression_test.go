@@ -19,7 +19,7 @@ func TestCompressionNone(t *testing.T) {
 	var receivedBody []byte
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/batch") {
+		if strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			receivedContentType = r.Header.Get("Content-Type")
 			receivedContentEncoding = r.Header.Get("Content-Encoding")
 			receivedURL = r.URL.String()
@@ -44,7 +44,7 @@ func TestCompressionNone(t *testing.T) {
 	client.Close()
 
 	// Verify no compression query param
-	require.Equal(t, "/batch/", receivedURL)
+	require.Equal(t, "/v1/insights/e", receivedURL)
 	// Verify Content-Type is application/json
 	require.Equal(t, "application/json", receivedContentType)
 	// Verify no Content-Encoding header
@@ -63,7 +63,7 @@ func TestCompressionGzip(t *testing.T) {
 	var receivedBody []byte
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/batch") {
+		if strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			receivedContentType = r.Header.Get("Content-Type")
 			receivedContentEncoding = r.Header.Get("Content-Encoding")
 			receivedURL = r.URL.String()
@@ -88,7 +88,7 @@ func TestCompressionGzip(t *testing.T) {
 	client.Close()
 
 	// Verify compression query param is present
-	require.Equal(t, "/batch/?compression=gzip", receivedURL)
+	require.Equal(t, "/v1/insights/e?compression=gzip", receivedURL)
 	// Verify Content-Type is still application/json
 	require.Equal(t, "application/json", receivedContentType)
 	// Verify Content-Encoding is gzip
@@ -104,7 +104,7 @@ func TestCompressionGzipDecompressesCorrectly(t *testing.T) {
 	var receivedBody []byte
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/batch") {
+		if strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			receivedBody, _ = io.ReadAll(r.Body)
 			w.WriteHeader(200)
 		}
@@ -160,7 +160,7 @@ func TestCompressionGzipReducesPayloadSize(t *testing.T) {
 
 	// First capture uncompressed size
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/batch") {
+		if strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			body, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
 			uncompressedSize = len(body)
@@ -195,7 +195,7 @@ func TestCompressionGzipReducesPayloadSize(t *testing.T) {
 
 	// Now capture compressed size
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/batch") {
+		if strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			body, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
 			compressedSize = len(body)
@@ -242,7 +242,7 @@ func TestCompressionGzipWithCallback(t *testing.T) {
 	var successCount, failureCount int
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/batch") {
+		if strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			requestReceived = true
 			// Verify it's gzip compressed
 			require.Equal(t, "gzip", r.Header.Get("Content-Encoding"))
@@ -281,7 +281,7 @@ func TestCompressionNoneWithCallback(t *testing.T) {
 	var successCount, failureCount int
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/batch") {
+		if strings.HasPrefix(r.URL.Path, "/v1/insights/e") {
 			requestReceived = true
 			// Verify it's NOT gzip compressed
 			require.Empty(t, r.Header.Get("Content-Encoding"))

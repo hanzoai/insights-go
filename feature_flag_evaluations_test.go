@@ -29,7 +29,7 @@ func newFlagsServer(t *testing.T, fixtureName string) *flagsServer {
 	t.Helper()
 	fs := &flagsServer{}
 	fs.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/flags") {
+		if strings.HasPrefix(r.URL.Path, "/v1/flags") {
 			body := new(bytes.Buffer)
 			body.ReadFrom(r.Body)
 			fs.mu.Lock()
@@ -568,7 +568,7 @@ func TestEvaluateFlags_EmptyDistinctId_NoEvents(t *testing.T) {
 	t.Parallel()
 	var calls atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/flags") {
+		if strings.HasPrefix(r.URL.Path, "/v1/flags") {
 			calls.Add(1)
 			w.Write([]byte(fixture("test-flags-v4.json")))
 		}
@@ -611,7 +611,7 @@ func TestEvaluateFlags_LocalEvaluation_TagsLocallyEvaluated(t *testing.T) {
 		case strings.HasPrefix(r.URL.Path, "/flags/definitions") || strings.HasPrefix(r.URL.Path, "/api/feature_flag/local_evaluation"):
 			localCalls.Add(1)
 			w.Write([]byte(fixture("feature_flag/test-simple-flag-person-prop.json")))
-		case strings.HasPrefix(r.URL.Path, "/flags"):
+		case strings.HasPrefix(r.URL.Path, "/v1/flags"):
 			remoteCalls.Add(1)
 			w.Write([]byte(fixture("test-flags-v4.json")))
 		}
@@ -830,7 +830,7 @@ func TestCaptureFlagCalled_DedupesAcrossSameGroupContext(t *testing.T) {
 func TestErrorsWhileComputingFlags_PropagatesToEvent(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/flags") {
+		if strings.HasPrefix(r.URL.Path, "/v1/flags") {
 			w.Write([]byte(`{
 				"flags": {
 					"enabled-flag": {
@@ -928,7 +928,7 @@ func TestEvaluateFlags_RemoteErrorReturnsPartialLocalSnapshot(t *testing.T) {
 		switch {
 		case strings.HasPrefix(r.URL.Path, "/flags/definitions") || strings.HasPrefix(r.URL.Path, "/api/feature_flag/local_evaluation"):
 			w.Write([]byte(fixture("feature_flag/test-get-all-flags-with-fallback-but-only-local-evaluation-set.json")))
-		case strings.HasPrefix(r.URL.Path, "/flags"):
+		case strings.HasPrefix(r.URL.Path, "/v1/flags"):
 			http.Error(w, "boom", http.StatusInternalServerError)
 		}
 	}))

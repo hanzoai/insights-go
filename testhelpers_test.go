@@ -167,7 +167,7 @@ func (b *MockServerBuilder) Build() *httptest.Server {
 
 		// Route to appropriate handler
 		switch {
-		case strings.HasPrefix(r.URL.Path, "/batch"):
+		case strings.HasPrefix(r.URL.Path, "/v1/insights/e"):
 			if b.config.BatchHandler != nil {
 				body, _ := io.ReadAll(r.Body)
 				b.config.BatchHandler(body)
@@ -177,7 +177,7 @@ func (b *MockServerBuilder) Build() *httptest.Server {
 				w.Write([]byte(b.config.BatchResponse))
 			}
 
-		case r.URL.Path == "/flags" || r.URL.Path == "/flags/":
+		case r.URL.Path == "/v1/flags":
 			if b.config.FlagsHandler != nil {
 				b.config.FlagsHandler(w, r)
 				return
