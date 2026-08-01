@@ -1,4 +1,10 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.26.5-alpine AS builder
+
+# The official golang images set GOTOOLCHAIN=local, so a base older than the
+# `go` directive in go.mod fails the build outright rather than fetching a
+# toolchain. `auto` lets a future go.mod bump resolve itself against the
+# checksum database instead of hard-failing here.
+ENV GOTOOLCHAIN=auto
 
 WORKDIR /app
 
