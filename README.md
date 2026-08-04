@@ -172,10 +172,6 @@ make build          # Run tests and build
 make test           # Run tests only
 ```
 
-## Attribution
-
-Based on PostHog Go SDK. See upstream LICENSE for attribution.
-
 ## License
 
-MIT License. Copyright (c) Hanzo AI Inc.
+MIT — see [LICENSE.md](LICENSE.md) and [NOTICE](NOTICE).
