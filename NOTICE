@@ -1,0 +1,16 @@
+insights-go
+Copyright (c) 2020-2026 Hanzo AI, Inc.
+
+This product includes software from the PostHog Go SDK
+(https://github.com/PostHog/posthog-go), licensed under MIT:
+
+    Copyright (c) 2020 PostHog (part of Hiberly Inc)
+
+The PostHog Go SDK is itself derived from the Segment analytics-go library,
+also under MIT:
+
+    Copyright (c) 2016 Segment, Inc.
+
+Both notices are reproduced verbatim in LICENSE.md. Hanzo branding (product
+name, package path, documentation) is Hanzo's own and is not part of the
+upstream work.
