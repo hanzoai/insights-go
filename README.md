@@ -174,7 +174,6 @@ make test           # Run tests only
 
 ## Attribution
 
-Based on PostHog Go SDK. See upstream LICENSE for attribution.
 
 ## License
 
