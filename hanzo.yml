@@ -1,0 +1,18 @@
+# hanzoai/insights-go — the Go client SDK for Insights. A library: ships from a
+# tag as a Go module, builds no image, deploys nowhere.
+#
+# This is the repo's own `make test` target inlined (vet, then the suite with
+# -race -count=1), not a call to make: hanzo.yml is read by the runner and by
+# platform.hanzo.ai, and neither is promised a make binary.
+#
+# -race is not decoration here. The client batches captures on a background
+# goroutine and evaluates feature flags from a polled cache, so every one of the
+# 41 suites touches shared state across goroutines; a data race in flag
+# evaluation returns the wrong variant to a caller and nothing ever reports it.
+# -count=1 defeats the test cache so a green run means these tests actually ran.
+test:
+  - name: vet-and-test
+    run: |
+      set -e
+      go vet ./...
+      go test -race -count=1 -timeout=10m ./...
