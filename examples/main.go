@@ -18,8 +18,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/joho/godotenv"
 	_ "github.com/hanzoai/insights-go" // Used by other files in this package
+	"github.com/joho/godotenv"
 )
 
 var (

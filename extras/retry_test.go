@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/orian/flakyhttp"
 	insights "github.com/hanzoai/insights-go"
+	"github.com/orian/flakyhttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
