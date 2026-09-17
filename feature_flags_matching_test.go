@@ -41,8 +41,7 @@ func TestMatchPropertyInvalidOperator(t *testing.T) {
 		t.Error("Should not match")
 	}
 
-	var inconclusiveErr *InconclusiveMatchError
-	if !errors.As(err, &inconclusiveErr) {
+	if _, ok := errors.AsType[*InconclusiveMatchError](err); !ok {
 		t.Error("Error type is not a match")
 	}
 
@@ -51,7 +50,7 @@ func TestMatchPropertyInvalidOperator(t *testing.T) {
 func TestMatchPropertySlice(t *testing.T) {
 	property := FlagProperty{
 		Key:      "Browser",
-		Value:    []interface{}{"Chrome", "Firefox"},
+		Value:    []any{"Chrome", "Firefox"},
 		Operator: "exact",
 	}
 
@@ -96,7 +95,7 @@ func TestMatchPropertySlice(t *testing.T) {
 func TestMatchPropertySliceExact(t *testing.T) {
 	property := FlagProperty{
 		Key:      "Browser",
-		Value:    []interface{}{"Chrome", "Firefox"},
+		Value:    []any{"Chrome", "Firefox"},
 		Operator: "exact",
 	}
 
@@ -193,7 +192,7 @@ func TestMatchPropertyNumber(t *testing.T) {
 
 func TestMatchPropertyRegex(t *testing.T) {
 
-	shouldMatch := []interface{}{"value.com", "value2.com"}
+	shouldMatch := []any{"value.com", "value2.com"}
 
 	property := FlagProperty{
 		Key:      "key",
@@ -212,7 +211,7 @@ func TestMatchPropertyRegex(t *testing.T) {
 		}
 	}
 
-	shouldNotMatch := []interface{}{".com343tfvalue5", "Alakazam", 123}
+	shouldNotMatch := []any{".com343tfvalue5", "Alakazam", 123}
 
 	for _, val := range shouldNotMatch {
 		isMatch, err := matchProperty(property, NewProperties().Set("key", val))
@@ -232,7 +231,7 @@ func TestMatchPropertyRegex(t *testing.T) {
 		Operator: "regex",
 	}
 
-	shouldNotMatch = []interface{}{"value", "valu2"}
+	shouldNotMatch = []any{"value", "valu2"}
 	for _, val := range shouldNotMatch {
 		isMatch, err := matchProperty(property, NewProperties().Set("key", val))
 		if err != nil {
@@ -252,7 +251,7 @@ func TestMatchPropertyRegex(t *testing.T) {
 		Operator: "regex",
 	}
 
-	shouldMatch = []interface{}{"4", 4}
+	shouldMatch = []any{"4", 4}
 	for _, val := range shouldMatch {
 		isMatch, err := matchProperty(property, NewProperties().Set("key", val))
 		if err != nil {
@@ -266,7 +265,7 @@ func TestMatchPropertyRegex(t *testing.T) {
 }
 
 func TestMatchPropertyContains(t *testing.T) {
-	shouldMatch := []interface{}{"value", "value2", "value3", "value4", "343tfvalue5"}
+	shouldMatch := []any{"value", "value2", "value3", "value4", "343tfvalue5"}
 
 	property := FlagProperty{
 		Key:      "key",
@@ -285,7 +284,7 @@ func TestMatchPropertyContains(t *testing.T) {
 		}
 	}
 
-	shouldNotMatch := []interface{}{"Alakazam", 123}
+	shouldNotMatch := []any{"Alakazam", 123}
 
 	for _, val := range shouldNotMatch {
 		isMatch, err := matchProperty(property, NewProperties().Set("key", val))

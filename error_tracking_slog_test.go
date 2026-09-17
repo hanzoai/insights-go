@@ -221,7 +221,7 @@ func TestSlogCaptureHandler_WithPropertiesFn(t *testing.T) {
 		t.Fatal("expected Properties to be set")
 	}
 
-	expectedProps := map[string]interface{}{
+	expectedProps := map[string]any{
 		"environment": "production",
 		"retry_count": int64(3),
 	}

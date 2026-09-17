@@ -9,19 +9,19 @@ import (
 
 type loggerFromTest testing.T
 
-func (l *loggerFromTest) Debugf(format string, args ...interface{}) {
+func (l *loggerFromTest) Debugf(format string, args ...any) {
 	(*testing.T)(l).Logf(format, args...)
 }
 
-func (l *loggerFromTest) Logf(format string, args ...interface{}) {
+func (l *loggerFromTest) Logf(format string, args ...any) {
 	(*testing.T)(l).Logf(format, args...)
 }
 
-func (l *loggerFromTest) Warnf(format string, args ...interface{}) {
+func (l *loggerFromTest) Warnf(format string, args ...any) {
 	(*testing.T)(l).Logf(format, args...)
 }
 
-func (l *loggerFromTest) Errorf(format string, args ...interface{}) {
+func (l *loggerFromTest) Errorf(format string, args ...any) {
 	(*testing.T)(l).Errorf(format, args...)
 }
 

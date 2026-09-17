@@ -1,5 +1,7 @@
 package insights
 
+import "maps"
+
 // Properties is used to represent properties in messages that support it.
 // It is a free-form object so the application can set any value it sees fit but
 // a few helper method are defined to make it easier to instantiate properties with
@@ -12,7 +14,7 @@ package insights
 //			Set("revenue", 10.0).
 //			Set("currency", "USD"),
 //	}
-type Properties map[string]interface{}
+type Properties map[string]any
 
 // NewProperties creates an empty Properties map for fluent construction.
 func NewProperties() Properties {
@@ -20,7 +22,7 @@ func NewProperties() Properties {
 }
 
 // Set assigns a property value and returns the receiver.
-func (p Properties) Set(name string, value interface{}) Properties {
+func (p Properties) Set(name string, value any) Properties {
 	p[name] = value
 	return p
 }
@@ -32,9 +34,7 @@ func (p Properties) Merge(props Properties) Properties {
 		return p
 	}
 
-	for k, v := range props {
-		p[k] = v
-	}
+	maps.Copy(p, props)
 
 	return p
 }

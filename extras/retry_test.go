@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/orian/flakyhttp"
 	insights "github.com/hanzoai/insights-go"
+	"github.com/orian/flakyhttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -84,7 +84,7 @@ func TestRetryBehavior(t *testing.T) {
 			}
 
 			if tc.disableRetry {
-				config.MaxRetries = insights.Ptr[int](0)
+				config.MaxRetries = new(0)
 			}
 			if tc.retryAfter != nil {
 				config.RetryAfter = tc.retryAfter

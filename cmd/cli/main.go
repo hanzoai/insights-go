@@ -101,8 +101,8 @@ func main() {
 }
 
 // parseJSON parses a JSON formatted string into a map.
-func parseJSON(v string) map[string]interface{} {
-	var m map[string]interface{}
+func parseJSON(v string) map[string]any {
+	var m map[string]any
 	err := json.Unmarshal([]byte(v), &m)
 	if err != nil {
 		fmt.Println("could not parse json", v)

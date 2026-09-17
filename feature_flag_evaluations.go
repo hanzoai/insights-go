@@ -80,7 +80,7 @@ func (e *FeatureFlagEvaluations) IsEnabled(key string) bool {
 // true or false for boolean flags, or nil for unknown flags. The first call
 // for a given key fires $feature_flag_called with full evaluation metadata;
 // subsequent calls with the same response are deduped.
-func (e *FeatureFlagEvaluations) GetFlag(key string) interface{} {
+func (e *FeatureFlagEvaluations) GetFlag(key string) any {
 	if e == nil {
 		return nil
 	}
@@ -180,7 +180,7 @@ func (e *FeatureFlagEvaluations) eventProperties() Properties {
 	}
 	active := make([]string, 0, len(e.flags))
 	for key, flag := range e.flags {
-		var value interface{}
+		var value any
 		switch {
 		case !flag.Enabled:
 			value = false
@@ -224,7 +224,7 @@ func (e *FeatureFlagEvaluations) recordAccess(key string) {
 
 	flag, found := e.flags[key]
 
-	var response interface{}
+	var response any
 	switch {
 	case !found:
 		response = nil

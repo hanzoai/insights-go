@@ -80,7 +80,6 @@ func TestFlags(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test // Capture loop variable for Go 1.21 compatibility
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
 				w.Write([]byte(fixture(test.fixture)))
@@ -92,7 +91,7 @@ func TestFlags(t *testing.T) {
 			subTests := []struct {
 				name     string
 				flagKey  string
-				expected interface{}
+				expected any
 			}{
 				{name: "IsFeatureEnabled", flagKey: "enabled-flag", expected: true},
 				{name: "IsFeatureEnabled", flagKey: "disabled-flag", expected: false},
@@ -131,7 +130,7 @@ func TestFlags(t *testing.T) {
 			subTests := []struct {
 				name     string
 				flagKey  string
-				expected interface{}
+				expected any
 			}{
 				{name: "GetFeatureFlag", flagKey: "enabled-flag", expected: true},
 				{name: "GetFeatureFlag", flagKey: "disabled-flag", expected: false},
@@ -171,7 +170,7 @@ func TestFlags(t *testing.T) {
 			subTests := []struct {
 				name     string
 				flagKey  string
-				expected interface{}
+				expected any
 			}{
 				{name: "GetFeatureFlagPayload", flagKey: "enabled-flag", expected: `{"foo": 1}`},
 				{name: "GetFeatureFlagPayload", flagKey: "disabled-flag", expected: ""}, // Incorrectly returns "" for disabled flags
@@ -441,7 +440,7 @@ func TestFlagsV4(t *testing.T) {
 	tests := []struct {
 		name            string
 		flagKey         string
-		expected        interface{}
+		expected        any
 		expectedVersion int
 		expectedReason  string
 		expectedId      int
@@ -551,7 +550,6 @@ func TestGetFeatureFlagResult(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/flags" || r.URL.Path == "/flags/" {
 				w.Write([]byte(fixture(test.fixture)))
@@ -921,7 +919,7 @@ func TestWhitespacePersonalAPIKeySkipsPollerAndUsesRemoteFlags(t *testing.T) {
 	result, err := client.GetFeatureFlagResult(FeatureFlagPayload{
 		Key:                   "any-flag",
 		DistinctId:            "some-distinct-id",
-		SendFeatureFlagEvents: Ptr(false),
+		SendFeatureFlagEvents: new(false),
 	})
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)

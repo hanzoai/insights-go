@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"maps"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -47,7 +48,7 @@ type EventPool struct {
 // Events are varied enough to avoid caching effects
 func NewEventPool(n int) *EventPool {
 	pool := &EventPool{events: make([]Capture, n)}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		pool.events[i] = generateVariedCapture(i)
 	}
 	return pool
@@ -60,7 +61,7 @@ func NewEventPoolWithCardinalityDistribution(n int) *EventPool {
 	templatesPerCardinality := make(map[PropertyCardinality][]templateData)
 	for _, cardinality := range []PropertyCardinality{CardinalityLow, CardinalityMedium, CardinalityHigh} {
 		templates := make([]templateData, NumTemplates)
-		for i := 0; i < NumTemplates; i++ {
+		for i := range NumTemplates {
 			templates[i] = templateData{
 				properties: generatePropertiesWithCardinality(i, cardinality),
 				groups:     generateGroupsWithCardinality(i, cardinality),
@@ -71,7 +72,7 @@ func NewEventPoolWithCardinalityDistribution(n int) *EventPool {
 
 	// Clone templates to fill pool - each slot gets unique maps
 	pool := &EventPool{events: make([]Capture, n)}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		cardinality := selectCardinality(i)
 		templates := templatesPerCardinality[cardinality]
 		tmpl := templates[i%len(templates)]
@@ -92,7 +93,7 @@ func NewEventPoolWithCardinalityDistribution(n int) *EventPool {
 func NewEventPoolWithCardinality(n int, cardinality PropertyCardinality) *EventPool {
 	// Create templates with varied properties
 	templates := make([]templateData, NumTemplates)
-	for i := 0; i < NumTemplates; i++ {
+	for i := range NumTemplates {
 		templates[i] = templateData{
 			properties: generatePropertiesWithCardinality(i, cardinality),
 			groups:     generateGroupsWithCardinality(i, cardinality),
@@ -101,7 +102,7 @@ func NewEventPoolWithCardinality(n int, cardinality PropertyCardinality) *EventP
 
 	// Clone templates to fill pool - each slot gets unique maps
 	pool := &EventPool{events: make([]Capture, n)}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		tmpl := templates[i%NumTemplates]
 		pool.events[i] = Capture{
 			DistinctId: generateDistinctId(i),
@@ -147,9 +148,7 @@ func cloneProperties(src Properties) Properties {
 		return nil
 	}
 	dst := make(Properties, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -159,9 +158,7 @@ func cloneGroups(src Groups) Groups {
 		return nil
 	}
 	dst := make(Groups, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -321,7 +318,7 @@ func generatePropertiesWithCardinality(seed int, cardinality PropertyCardinality
 		case 6:
 			props[key] = []string{fmt.Sprintf("item_%d", i), fmt.Sprintf("item_%d", i+1)} // array
 		case 7:
-			props[key] = map[string]interface{}{"nested_key": i, "nested_val": seed} // nested map
+			props[key] = map[string]any{"nested_key": i, "nested_val": seed} // nested map
 		}
 	}
 	return props
@@ -363,7 +360,7 @@ func GenerateCapturesBatchWithCardinality(count int, cardinality PropertyCardina
 // Property edge case generators for testing edge cases
 var edgeCaseProperties = map[string]Properties{
 	"unicode":       {"名前": "テスト", "emoji": "🚀", "arabic": "مرحبا"},
-	"nested":        {"user": map[string]interface{}{"id": 1, "meta": map[string]interface{}{"created": "2024-01-01"}}},
+	"nested":        {"user": map[string]any{"id": 1, "meta": map[string]any{"created": "2024-01-01"}}},
 	"large_string":  {"data": strings.Repeat("x", 10000)},
 	"special_chars": {"path": "/api/v1?foo=bar&baz=qux", "json_in_string": `{"nested": "json"}`},
 	"numbers":       {"int": 42, "float": 3.14159, "negative": -100, "zero": 0},

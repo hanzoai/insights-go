@@ -1,5 +1,4 @@
 //go:build go1.6
-// +build go1.6
 
 package insights
 

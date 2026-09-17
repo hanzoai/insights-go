@@ -1,4 +1,4 @@
-FROM golang:1.26.5-alpine AS builder
+FROM golang:1.27.1-alpine AS builder
 
 # The official golang images set GOTOOLCHAIN=local, so a base older than the
 # `go` directive in go.mod fails the build outright rather than fetching a

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -69,13 +70,13 @@ type Client interface {
 	// for boolean flags. The FeatureFlagPayload parameter supplies the flag key,
 	// distinct ID, optional groups/properties, and evaluation options.
 	// Deprecated: Prefer EvaluateFlags for new code.
-	IsFeatureEnabled(FeatureFlagPayload) (interface{}, error)
+	IsFeatureEnabled(FeatureFlagPayload) (any, error)
 
 	// GetFeatureFlag evaluates one feature flag for a user. It returns a variant
 	// string for multivariate flags, true or false for boolean flags, false with
 	// nil error when the flag is missing/disabled, and an error for evaluation failures.
 	// Deprecated: Prefer EvaluateFlags for new code.
-	GetFeatureFlag(FeatureFlagPayload) (interface{}, error)
+	GetFeatureFlag(FeatureFlagPayload) (any, error)
 
 	// GetFeatureFlagResult evaluates one feature flag and returns its value and payload together.
 	// Use this instead of calling GetFeatureFlag and GetFeatureFlagPayload separately.
@@ -96,7 +97,7 @@ type Client interface {
 	// GetAllFlags evaluates all flags for a user. Returned values are booleans for
 	// boolean flags and strings for multivariate variants. It returns ErrNoPersonalAPIKey
 	// when OnlyEvaluateLocally is true without PersonalApiKey.
-	GetAllFlags(FeatureFlagPayloadNoKey) (map[string]interface{}, error)
+	GetAllFlags(FeatureFlagPayloadNoKey) (map[string]any, error)
 
 	// EvaluateFlags returns a snapshot of feature-flag evaluations for the
 	// given distinct_id using at most one /flags request. Returns ErrNoDistinctID
@@ -523,7 +524,7 @@ func (c *client) EnqueueWithContext(ctx context.Context, msg Message) (err error
 	}
 }
 
-func (c *client) IsFeatureEnabled(flagConfig FeatureFlagPayload) (interface{}, error) {
+func (c *client) IsFeatureEnabled(flagConfig FeatureFlagPayload) (any, error) {
 	if err := flagConfig.validate(); err != nil {
 		return false, err
 	}
@@ -565,7 +566,7 @@ func (c *client) GetFeatureFlagPayload(flagConfig FeatureFlagPayload) (string, e
 	return *result.RawPayload, nil
 }
 
-func (c *client) GetFeatureFlag(flagConfig FeatureFlagPayload) (interface{}, error) {
+func (c *client) GetFeatureFlag(flagConfig FeatureFlagPayload) (any, error) {
 	result, err := c.GetFeatureFlagResult(flagConfig)
 	if err != nil {
 		if errors.Is(err, ErrFlagNotFound) {
@@ -597,7 +598,7 @@ func (c *client) getFeatureFlagResultWithContext(ctx context.Context, flagConfig
 		return nil, ErrNoPersonalAPIKey
 	}
 
-	var flagValue interface{}
+	var flagValue any
 	var err error
 	// Use stack-allocated evalResult to avoid heap pointer allocation on the hot path
 	var evalResult featureFlagEvaluationResult
@@ -770,9 +771,9 @@ func canonicalGroupsRepr(groups Groups) string {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	pairs := make([][2]interface{}, len(keys))
+	pairs := make([][2]any, len(keys))
 	for i, k := range keys {
-		pairs[i] = [2]interface{}{k, groups[k]}
+		pairs[i] = [2]any{k, groups[k]}
 	}
 	b, err := json.Marshal(pairs)
 	if err != nil {
@@ -811,14 +812,14 @@ func (c *client) GetFeatureFlags() ([]FeatureFlag, error) {
 // A flag value is either a boolean or a variant string (for multivariate flags)
 // This first attempts local evaluation if a poller exists, otherwise it falls
 // back to the flags endpoint
-func (c *client) GetAllFlags(flagConfig FeatureFlagPayloadNoKey) (map[string]interface{}, error) {
+func (c *client) GetAllFlags(flagConfig FeatureFlagPayloadNoKey) (map[string]any, error) {
 	return c.getAllFlagsWithContext(context.Background(), flagConfig)
 }
 
 // getAllFlagsWithContext returns all flags and their values for a given user.
 // The context can be used to control timeouts and cancellation.
 // A flag value is either a boolean or a variant string (for multivariate flags)
-func (c *client) getAllFlagsWithContext(ctx context.Context, flagConfig FeatureFlagPayloadNoKey) (map[string]interface{}, error) {
+func (c *client) getAllFlagsWithContext(ctx context.Context, flagConfig FeatureFlagPayloadNoKey) (map[string]any, error) {
 	// Check context before starting
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -832,7 +833,7 @@ func (c *client) getAllFlagsWithContext(ctx context.Context, flagConfig FeatureF
 		return nil, ErrNoPersonalAPIKey
 	}
 
-	var flagsValue map[string]interface{}
+	var flagsValue map[string]any
 	var err error
 
 	if c.featureFlagsPoller != nil {
@@ -1028,7 +1029,7 @@ func (c *client) populateLocalEvaluations(records map[string]evaluatedFlagRecord
 		record := evaluatedFlagRecord{
 			Key:              storedFlag.Key,
 			LocallyEvaluated: true,
-			Reason:           ptrString(localReason),
+			Reason:           new(localReason),
 		}
 		switch v := value.(type) {
 		case bool:
@@ -1087,8 +1088,6 @@ func recordFromFlagDetail(detail FlagDetail) evaluatedFlagRecord {
 	}
 	return record
 }
-
-func ptrString(s string) *string { return &s }
 
 // featureFlagEvaluationsHostWithContext wires the snapshot's callbacks to this client.
 func (c *client) featureFlagEvaluationsHostWithContext(ctx context.Context) featureFlagEvaluationsHost {
@@ -1517,7 +1516,7 @@ func (c *client) loop() {
 	}
 }
 
-func (c *client) debugf(format string, args ...interface{}) {
+func (c *client) debugf(format string, args ...any) {
 	c.Logger.Debugf(format, args...)
 }
 
@@ -1525,11 +1524,11 @@ func (c *client) warnPersonalAPIKeyMissing(method string) {
 	c.Warnf("PostHog personal_api_key is not configured; %s requires a PersonalApiKey.", method)
 }
 
-func (c *client) Errorf(format string, args ...interface{}) {
+func (c *client) Errorf(format string, args ...any) {
 	c.Logger.Errorf(format, args...)
 }
 
-func (c *client) Warnf(format string, args ...interface{}) {
+func (c *client) Warnf(format string, args ...any) {
 	c.Logger.Warnf(format, args...)
 }
 
@@ -1549,11 +1548,11 @@ func (c *client) notifyFailure(msgs []APIMessage, err error) {
 	}
 }
 
-func (c *client) getFeatureVariants(distinctId string, groups Groups, personProperties Properties, groupProperties map[string]Properties) (map[string]interface{}, error) {
+func (c *client) getFeatureVariants(distinctId string, groups Groups, personProperties Properties, groupProperties map[string]Properties) (map[string]any, error) {
 	return c.getFeatureVariantsWithOptions(distinctId, groups, personProperties, groupProperties, nil)
 }
 
-func (c *client) getFeatureVariantsWithOptions(distinctId string, groups Groups, personProperties Properties, groupProperties map[string]Properties, options *SendFeatureFlagsOptions) (map[string]interface{}, error) {
+func (c *client) getFeatureVariantsWithOptions(distinctId string, groups Groups, personProperties Properties, groupProperties map[string]Properties, options *SendFeatureFlagsOptions) (map[string]any, error) {
 	if c.featureFlagsPoller == nil {
 		errorMessage := "specifying a PersonalApiKey is required for using feature flags"
 		c.Errorf("%s", errorMessage)
@@ -1633,11 +1632,9 @@ func (c *client) isFeatureFlagsQuotaLimited(flagsResponse *FlagsResponse) bool {
 	if flagsResponse.QuotaLimited == nil {
 		return false
 	}
-	for _, limitedFeature := range flagsResponse.QuotaLimited {
-		if limitedFeature == "feature_flags" {
-			c.Logger.Warnf("[FEATURE FLAGS] feature flags quota limited")
-			return true
-		}
+	if slices.Contains(flagsResponse.QuotaLimited, "feature_flags") {
+		c.Logger.Warnf("[FEATURE FLAGS] feature flags quota limited")
+		return true
 	}
 	return false
 }
@@ -1686,7 +1683,7 @@ func (c *client) getFeatureFlagFromRemote(key string, distinctId string, deviceI
 	return result
 }
 
-func (c *client) getAllFeatureFlagsFromRemote(distinctId string, deviceId *string, groups Groups, personProperties Properties, groupProperties map[string]Properties) (map[string]interface{}, error) {
+func (c *client) getAllFeatureFlagsFromRemote(distinctId string, deviceId *string, groups Groups, personProperties Properties, groupProperties map[string]Properties) (map[string]any, error) {
 	flagsResponse, err := c.decider.makeFlagsRequest(distinctId, deviceId, groups, personProperties, groupProperties, c.GetDisableGeoIP(), nil)
 	if err != nil {
 		return nil, err

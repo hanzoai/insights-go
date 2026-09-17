@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"runtime"
@@ -291,9 +292,7 @@ func mergeContextProperties(requestContext RequestContext, explicit Properties) 
 		if merged == nil {
 			merged = NewProperties()
 		}
-		for key, value := range explicit {
-			merged[key] = value
-		}
+		maps.Copy(merged, explicit)
 	}
 	return merged
 }
@@ -303,13 +302,11 @@ func cloneRequestProperties(properties Properties) Properties {
 		return nil
 	}
 	cloned := make(Properties, len(properties))
-	for key, value := range properties {
-		cloned[key] = value
-	}
+	maps.Copy(cloned, properties)
 	return cloned
 }
 
-func sanitizePropertyValue(value interface{}) interface{} {
+func sanitizePropertyValue(value any) any {
 	if value == nil {
 		return nil
 	}
@@ -441,7 +438,7 @@ func enqueueWithContext(ctx context.Context, client EnqueueClient, msg Message) 
 	return client.Enqueue(msg)
 }
 
-func capturePanic(ctx context.Context, client EnqueueClient, panicValue interface{}, statusCode int, panicStack []byte) {
+func capturePanic(ctx context.Context, client EnqueueClient, panicValue any, statusCode int, panicStack []byte) {
 	defer func() {
 		// Panic capture runs while the host application is already panicking. Any SDK,
 		// callback, or client panic here must not replace the original application panic.

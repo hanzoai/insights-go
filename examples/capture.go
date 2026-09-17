@@ -23,7 +23,7 @@ func TestCapture(projectAPIKey, endpoint string) {
 	if err := client.Enqueue(insights.Capture{
 		Event:      "Download",
 		DistinctId: "user_123456",
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"application": "Insights Go",
 			"version":     "1.0.0",
 			"file_size":   "2.5MB",
@@ -37,7 +37,7 @@ func TestCapture(projectAPIKey, endpoint string) {
 	if err := client.Enqueue(insights.Capture{
 		Event:      "$pageview",
 		DistinctId: "user_123456",
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"$current_url": "https://example.com/dashboard",
 			"$title":       "Dashboard - Insights",
 			"$referrer":    "https://google.com",
@@ -51,7 +51,7 @@ func TestCapture(projectAPIKey, endpoint string) {
 	if err := client.Enqueue(insights.Capture{
 		Event:      "Button Clicked",
 		DistinctId: "user_123456",
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"button_text": "Sign Up",
 			"page":        "/landing",
 			"experiment":  "homepage_test_v2",
@@ -83,7 +83,7 @@ func TestCaptureWithSendFeatureFlagOption(projectAPIKey, personalAPIKey, endpoin
 	if err := client.Enqueue(insights.Capture{
 		Event:      "Purchase",
 		DistinctId: "user_123456",
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"amount":   99.99,
 			"currency": "USD",
 			"product":  "Premium Plan",
@@ -98,7 +98,7 @@ func TestCaptureWithSendFeatureFlagOption(projectAPIKey, personalAPIKey, endpoin
 	if err := client.Enqueue(insights.Capture{
 		Event:      "Login",
 		DistinctId: "user_123456",
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"method":     "google",
 			"first_time": false,
 		},
@@ -132,7 +132,7 @@ func TestCaptureWithSendFeatureFlagsOptions(projectAPIKey, personalAPIKey, endpo
 	if err := client.Enqueue(insights.Capture{
 		Event:      "Feature Used",
 		DistinctId: "premium_user_456",
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"feature_name": "advanced_analytics",
 			"usage_count":  1,
 		},
@@ -148,7 +148,7 @@ func TestCaptureWithSendFeatureFlagsOptions(projectAPIKey, personalAPIKey, endpo
 	if err := client.Enqueue(insights.Capture{
 		Event:      "Team Action",
 		DistinctId: "enterprise_user_789",
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"action_type": "export_data",
 			"data_size":   "50MB",
 		},
@@ -168,7 +168,7 @@ func TestCaptureWithSendFeatureFlagsOptions(projectAPIKey, personalAPIKey, endpo
 	if err := client.Enqueue(insights.Capture{
 		Event:      "Quick Action",
 		DistinctId: "basic_user_321",
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"action": "button_click",
 			"page":   "homepage",
 		},

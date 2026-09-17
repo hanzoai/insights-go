@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"time"
 
 	json "github.com/goccy/go-json"
@@ -71,7 +72,7 @@ type FlagMetadata struct {
 }
 
 // GetValue returns the variant string when Variant is set; otherwise it returns Enabled.
-func (f FlagDetail) GetValue() interface{} {
+func (f FlagDetail) GetValue() any {
 	if f.Variant != nil {
 		return *f.Variant
 	}
@@ -81,7 +82,7 @@ func (f FlagDetail) GetValue() interface{} {
 // NewFlagDetail creates a FlagDetail from a flag key, a bool or string value,
 // and an optional raw JSON payload. String values are treated as enabled variants;
 // bool values are treated as boolean flag results.
-func NewFlagDetail(key string, value interface{}, payload json.RawMessage) FlagDetail {
+func NewFlagDetail(key string, value any, payload json.RawMessage) FlagDetail {
 	var variant *string
 	var enabled bool
 
@@ -116,7 +117,7 @@ type FlagsResponse struct {
 	Flags map[string]FlagDetail `json:"flags,omitempty"`
 
 	// FeatureFlags contains legacy v3 flag values keyed by flag key.
-	FeatureFlags map[string]interface{} `json:"featureFlags"`
+	FeatureFlags map[string]any `json:"featureFlags"`
 	// FeatureFlagPayloads contains legacy v3 raw payloads keyed by flag key.
 	FeatureFlagPayloads map[string]json.RawMessage `json:"featureFlagPayloads"`
 }
@@ -148,7 +149,7 @@ func (r *FlagsResponse) UnmarshalJSON(data []byte) error {
 		r.CommonResponseFields = v4.CommonResponseFields
 
 		// Calculate v3 format fields from Flags
-		r.FeatureFlags = make(map[string]interface{})
+		r.FeatureFlags = make(map[string]any)
 		r.FeatureFlagPayloads = make(map[string]json.RawMessage)
 		for key, flag := range r.Flags {
 			r.FeatureFlags[key] = flag.GetValue()
@@ -160,7 +161,7 @@ func (r *FlagsResponse) UnmarshalJSON(data []byte) error {
 	// If not v4, try v3 format
 	type V3Response struct {
 		CommonResponseFields
-		FeatureFlags        map[string]interface{}     `json:"featureFlags"`
+		FeatureFlags        map[string]any             `json:"featureFlags"`
 		FeatureFlagPayloads map[string]json.RawMessage `json:"featureFlagPayloads"`
 	}
 
@@ -304,13 +305,7 @@ func rawMessageToString(raw json.RawMessage) string {
 	if n >= 2 && raw[0] == '"' && raw[n-1] == '"' {
 		inner := raw[1 : n-1]
 		// Check for escape sequences
-		hasEscape := false
-		for _, b := range inner {
-			if b == '\\' {
-				hasEscape = true
-				break
-			}
-		}
+		hasEscape := slices.Contains(inner, '\\')
 		if !hasEscape {
 			// No escapes — direct conversion
 			return string(inner)

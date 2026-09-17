@@ -50,7 +50,7 @@ func TestCompressionNone(t *testing.T) {
 	// Verify no Content-Encoding header
 	require.Empty(t, receivedContentEncoding)
 	// Verify body is valid JSON (not compressed)
-	var batch map[string]interface{}
+	var batch map[string]any
 	err = json.Unmarshal(receivedBody, &batch)
 	require.NoError(t, err, "body should be valid JSON")
 	require.Contains(t, batch, "batch")
@@ -138,7 +138,7 @@ func TestCompressionGzipDecompressesCorrectly(t *testing.T) {
 	require.NoError(t, err, "should decompress successfully")
 
 	// Verify decompressed data is valid JSON with expected structure
-	var batch map[string]interface{}
+	var batch map[string]any
 	err = json.Unmarshal(decompressed, &batch)
 	require.NoError(t, err, "decompressed body should be valid JSON")
 	require.Contains(t, batch, "api_key")
@@ -146,9 +146,9 @@ func TestCompressionGzipDecompressesCorrectly(t *testing.T) {
 	require.Equal(t, "test-key", batch["api_key"])
 
 	// Verify batch contains our event
-	batchArray := batch["batch"].([]interface{})
+	batchArray := batch["batch"].([]any)
 	require.Len(t, batchArray, 1)
-	event := batchArray[0].(map[string]interface{})
+	event := batchArray[0].(map[string]any)
 	require.Equal(t, "user-123", event["distinct_id"])
 	require.Equal(t, "compression-test", event["event"])
 }
@@ -178,7 +178,7 @@ func TestCompressionGzipReducesPayloadSize(t *testing.T) {
 
 	// Send a larger payload with repetitive data (compresses well)
 	props := Properties{}
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		props[string(rune('a'+i%26))+string(rune('0'+i%10))] = "repetitive-value-that-should-compress-well"
 	}
 	err = client.Enqueue(Capture{

@@ -39,11 +39,11 @@ func TestConcurrentEnqueue(t *testing.T) {
 	require.NoError(t, err)
 
 	var wg sync.WaitGroup
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			for i := 0; i < eventsPerGoroutine; i++ {
+			for i := range eventsPerGoroutine {
 				idx := goroutineID*eventsPerGoroutine + i
 				err := client.Enqueue(pool.Get(idx))
 				if err != nil {
@@ -82,11 +82,11 @@ func TestConcurrentEnqueueDifferentMessageTypes(t *testing.T) {
 	require.NoError(t, err)
 
 	var wg sync.WaitGroup
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			for i := 0; i < messagesPerGoroutine; i++ {
+			for i := range messagesPerGoroutine {
 				msgType := i % 4
 				switch msgType {
 				case 0:
@@ -134,14 +134,14 @@ func TestConcurrentFeatureFlagEvaluation(t *testing.T) {
 		w.WriteHeader(200)
 		// Return proper format for both local evaluation and flags endpoints
 		if r.URL.Path == "/flags/definitions" {
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"flags": []map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
+				"flags": []map[string]any{
 					{
 						"id":     1,
 						"key":    "test-flag",
 						"active": true,
-						"filters": map[string]interface{}{
-							"groups": []map[string]interface{}{
+						"filters": map[string]any{
+							"groups": []map[string]any{
 								{
 									"rollout_percentage": 100,
 								},
@@ -152,8 +152,8 @@ func TestConcurrentFeatureFlagEvaluation(t *testing.T) {
 				"group_type_mapping": map[string]string{},
 			})
 		} else {
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"featureFlags": map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
+				"featureFlags": map[string]any{
 					"test-flag": true,
 				},
 			})
@@ -177,11 +177,11 @@ func TestConcurrentFeatureFlagEvaluation(t *testing.T) {
 	var wg sync.WaitGroup
 	errorCount := atomic.Int64{}
 
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			for i := 0; i < evaluationsPerGoroutine; i++ {
+			for i := range evaluationsPerGoroutine {
 				distinctId := fmt.Sprintf("user_%d_%d", goroutineID, i)
 				_, err := client.GetFeatureFlag(FeatureFlagPayload{
 					Key:        "test-flag",
@@ -206,7 +206,7 @@ func TestConcurrentClientOperations(t *testing.T) {
 	t.Parallel()
 	// This tests that Close() properly waits for all pending operations
 
-	for iteration := 0; iteration < 5; iteration++ {
+	for iteration := range 5 {
 		t.Run(fmt.Sprintf("iteration_%d", iteration), func(t *testing.T) {
 			var received atomic.Int64
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -228,7 +228,7 @@ func TestConcurrentClientOperations(t *testing.T) {
 			enqueueCount := 50
 			var wg sync.WaitGroup
 
-			for i := 0; i < enqueueCount; i++ {
+			for i := range enqueueCount {
 				wg.Add(1)
 				go func(idx int) {
 					defer wg.Done()
@@ -281,11 +281,11 @@ func TestConcurrentEnqueueWithSlowServer(t *testing.T) {
 	var wg sync.WaitGroup
 	start := time.Now()
 
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			for i := 0; i < eventsPerGoroutine; i++ {
+			for i := range eventsPerGoroutine {
 				idx := goroutineID*eventsPerGoroutine + i
 				client.Enqueue(pool.Get(idx))
 			}
@@ -319,12 +319,12 @@ func TestConcurrentPrepareForSend(t *testing.T) {
 	var wg sync.WaitGroup
 	results := make([]int, goroutines)
 
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
 			var total int
-			for i := 0; i < callsPerGoroutine; i++ {
+			for range callsPerGoroutine {
 				data, _, err := prepareForSend(capture)
 				if err != nil {
 					t.Errorf("prepareForSend error: %v", err)
@@ -360,17 +360,15 @@ func TestConcurrentEventPoolAccess(t *testing.T) {
 	var wg sync.WaitGroup
 	errorCount := atomic.Int64{}
 
-	for g := 0; g < goroutines; g++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for i := 0; i < accessesPerGoroutine; i++ {
+	for range goroutines {
+		wg.Go(func() {
+			for range accessesPerGoroutine {
 				event := pool.Next()
 				if event.DistinctId == "" || event.Event == "" {
 					errorCount.Add(1)
 				}
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -405,11 +403,11 @@ func TestConcurrentCallbackExecution(t *testing.T) {
 	eventsPerGoroutine := 20
 
 	var wg sync.WaitGroup
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			for i := 0; i < eventsPerGoroutine; i++ {
+			for i := range eventsPerGoroutine {
 				client.Enqueue(Capture{
 					DistinctId: fmt.Sprintf("user_%d", goroutineID),
 					Event:      fmt.Sprintf("event_%d", i),
@@ -442,7 +440,7 @@ func TestRaceConditionDetection(t *testing.T) {
 		}))
 		defer server.Close()
 
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			client, _ := NewWithConfig("test-key", Config{
 				Endpoint: server.URL,
 				// Uses production defaults for BatchSize, MaxEnqueuedRequests
@@ -451,7 +449,7 @@ func TestRaceConditionDetection(t *testing.T) {
 			var wg sync.WaitGroup
 
 			// Concurrent enqueues
-			for j := 0; j < 20; j++ {
+			for j := range 20 {
 				wg.Add(1)
 				go func(idx int) {
 					defer wg.Done()
@@ -471,14 +469,12 @@ func TestRaceConditionDetection(t *testing.T) {
 		pool := NewEventPool(100)
 
 		var wg sync.WaitGroup
-		for i := 0; i < 100; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for j := 0; j < 50; j++ {
+		for range 100 {
+			wg.Go(func() {
+				for range 50 {
 					_ = pool.Next()
 				}
-			}()
+			})
 		}
 		wg.Wait()
 	})

@@ -95,7 +95,7 @@ func TestMixedTargetingLocalEvaluation(t *testing.T) {
 		flagJSON  string
 		flagKey   string
 		opts      opts
-		expectVal interface{}
+		expectVal any
 	}{
 		{
 			name:      "person condition matches when no groups passed",

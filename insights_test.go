@@ -57,29 +57,29 @@ func (c testCallback) Failure(m APIMessage, e error) {
 
 // Instances of this type are used to mock the client logger in unit tests.
 type testLogger struct {
-	logf   func(string, ...interface{})
-	errorf func(string, ...interface{})
+	logf   func(string, ...any)
+	errorf func(string, ...any)
 }
 
-func (l testLogger) Debugf(format string, args ...interface{}) {
+func (l testLogger) Debugf(format string, args ...any) {
 	if l.logf != nil {
 		l.logf(format, args...)
 	}
 }
 
-func (l testLogger) Logf(format string, args ...interface{}) {
+func (l testLogger) Logf(format string, args ...any) {
 	if l.logf != nil {
 		l.logf(format, args...)
 	}
 }
 
-func (l testLogger) Warnf(format string, args ...interface{}) {
+func (l testLogger) Warnf(format string, args ...any) {
 	if l.logf != nil {
 		l.logf(format, args...)
 	}
 }
 
-func (l testLogger) Errorf(format string, args ...interface{}) {
+func (l testLogger) Errorf(format string, args ...any) {
 	if l.errorf != nil {
 		l.errorf(format, args...)
 	}
@@ -91,7 +91,7 @@ func TestNewWithConfig_LogsErrorForBlankAPIKeyAfterTrim(t *testing.T) {
 	client, err := NewWithConfig(" \n\t ", Config{
 		Logger: testLogger{
 			logf: t.Logf,
-			errorf: func(format string, args ...interface{}) {
+			errorf: func(format string, args ...any) {
 				logged = fmt.Sprintf(format, args...)
 			},
 		},
@@ -394,18 +394,18 @@ func assertPayloadEqual(t *testing.T, expected, actual string) {
 
 	sysCtx := getSystemContext().ToProperties()
 
-	var expectedJSON, actualJSON map[string]interface{}
+	var expectedJSON, actualJSON map[string]any
 	require.NoError(t, json.Unmarshal([]byte(expected), &expectedJSON))
 	require.NoError(t, json.Unmarshal([]byte(actual), &actualJSON))
 
-	batch, ok := actualJSON["batch"].([]interface{})
+	batch, ok := actualJSON["batch"].([]any)
 	require.True(t, ok, "actual JSON missing 'batch' array")
 	for i, item := range batch {
-		event, ok := item.(map[string]interface{})
+		event, ok := item.(map[string]any)
 		if !ok {
 			continue
 		}
-		props, ok := event["properties"].(map[string]interface{})
+		props, ok := event["properties"].(map[string]any)
 		if !ok {
 			continue
 		}
@@ -422,7 +422,7 @@ func assertPayloadEqual(t *testing.T, expected, actual string) {
 		"$os_distro":  {},
 		"$go_version": {},
 	}
-	opt := cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
+	opt := cmpopts.IgnoreMapEntries(func(k string, v any) bool {
 		_, ok := knownSysCtxKeys[k]
 		return ok
 	})
@@ -443,7 +443,7 @@ func mockServer() (chan []byte, *httptest.Server) {
 		buf := bytes.NewBuffer(nil)
 		io.Copy(buf, r.Body)
 
-		var v interface{}
+		var v any
 		err := json.Unmarshal(buf.Bytes(), &v)
 		if err != nil {
 			panic(err)
@@ -1000,7 +1000,7 @@ func TestCaptureMany(t *testing.T) {
 		"00000000-0000-0000-0000-000000000018",
 		"00000000-0000-0000-0000-000000000019",
 	}
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		client.Enqueue(Capture{
 			Uuid:       uuids[i],
 			Event:      "Download",
@@ -1259,7 +1259,7 @@ func TestFeatureFlagsWithNoPersonalApiKey(t *testing.T) {
 	client, err := NewWithConfig("Csyjlnlun3OzyNJAafdlv", Config{
 		PersonalApiKey: " \n\t ",
 		Logger: testLogger{
-			logf: func(format string, args ...interface{}) {
+			logf: func(format string, args ...any) {
 				logged = append(logged, fmt.Sprintf(format, args...))
 			},
 			errorf: t.Logf,
@@ -1342,7 +1342,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 		name           string
 		flagConfig     FeatureFlagPayload
 		mockResponse   string
-		expectedResult interface{}
+		expectedResult any
 		expectedError  string
 	}{
 		{
@@ -1892,7 +1892,7 @@ func TestGetFeatureFlagWithNoPersonalApiKey(t *testing.T) {
 		name          string
 		flagConfig    FeatureFlagPayload
 		mockResponse  string
-		expectedValue interface{}
+		expectedValue any
 		expectedError string
 	}{
 		{
@@ -2041,7 +2041,7 @@ func TestGetAllFeatureFlagsWithNoPersonalApiKey(t *testing.T) {
 		name          string
 		flagConfig    FeatureFlagPayloadNoKey
 		mockResponse  string
-		expectedFlags map[string]interface{}
+		expectedFlags map[string]any
 		expectedError string
 	}{
 		{
@@ -2056,7 +2056,7 @@ func TestGetAllFeatureFlagsWithNoPersonalApiKey(t *testing.T) {
 					"flag3": "variant-a"
 				}
 			}`,
-			expectedFlags: map[string]interface{}{
+			expectedFlags: map[string]any{
 				"flag1": true,
 				"flag2": false,
 				"flag3": "variant-a",
@@ -2070,7 +2070,7 @@ func TestGetAllFeatureFlagsWithNoPersonalApiKey(t *testing.T) {
 			mockResponse: `{
 				"featureFlags": {}
 			}`,
-			expectedFlags: map[string]interface{}{},
+			expectedFlags: map[string]any{},
 		},
 		{
 			name: "Invalid JSON response",
@@ -2110,7 +2110,7 @@ func TestGetAllFeatureFlagsWithNoPersonalApiKey(t *testing.T) {
 					"company_size_flag": "large"
 				}
 			}`,
-			expectedFlags: map[string]interface{}{
+			expectedFlags: map[string]any{
 				"enterprise_flag":   true,
 				"company_size_flag": "large",
 			},

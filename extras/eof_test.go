@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/orian/flakyhttp"
 	insights "github.com/hanzoai/insights-go"
+	"github.com/orian/flakyhttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,7 +77,7 @@ func TestEOFScenarios(t *testing.T) {
 				RetryAfter: func(i int) time.Duration { return time.Millisecond },
 			}
 			if tc.disableRetries {
-				clientConfig.MaxRetries = insights.Ptr[int](0)
+				clientConfig.MaxRetries = new(0)
 			}
 
 			client, err := insights.NewWithConfig("test-api-key", clientConfig)
@@ -86,7 +86,7 @@ func TestEOFScenarios(t *testing.T) {
 			err = client.Enqueue(insights.Capture{
 				DistinctId: "testuser",
 				Event:      "test event",
-				Properties: map[string]interface{}{
+				Properties: map[string]any{
 					"hello": "world",
 				},
 			})

@@ -883,7 +883,7 @@ func TestGetRemoteConfigPayload(t *testing.T) {
 
 	payload, _ := client.GetRemoteConfigPayload("flag_key")
 
-	var payloadMap map[string]interface{}
+	var payloadMap map[string]any
 	err := json.Unmarshal([]byte(payload), &payloadMap)
 	if err != nil {
 		t.Error("Failed to decode payload")
@@ -2206,7 +2206,7 @@ func TestSimpleFlagConsistency(t *testing.T) {
 		true,
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		isMatch, _ := client.IsFeatureEnabled(
 			FeatureFlagPayload{
 				Key:        "simple-flag",
@@ -2231,7 +2231,7 @@ func TestMultivariateFlagConsistency(t *testing.T) {
 	})
 	defer client.Close()
 
-	results := []interface{}{
+	results := []any{
 		"second-variant",
 		"second-variant",
 		"first-variant",
@@ -3234,7 +3234,7 @@ func TestMultivariateFlagConsistency(t *testing.T) {
 		"first-variant",
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 
 		variant, _ := client.GetFeatureFlag(
 			FeatureFlagPayload{
@@ -4263,7 +4263,7 @@ func TestMultivariateFlagConsistencyPayload(t *testing.T) {
 		"{\"test\": 1}",
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		variant, _ := client.GetFeatureFlagPayload(
 			FeatureFlagPayload{
 				Key:        "multivariate-flag",
@@ -4367,7 +4367,7 @@ func TestFlagWithTimeoutExceeded(t *testing.T) {
 	if !strings.Contains(err.Error(), "context deadline exceeded") {
 		t.Error("Expected context deadline exceeded error")
 	}
-	require.EqualValues(t, map[string]interface{}{"simple-flag": true}, variants)
+	require.EqualValues(t, map[string]any{"simple-flag": true}, variants)
 
 	// get all flags with full local evaluation possible
 	variants, err = client.GetAllFlags(
@@ -4381,7 +4381,7 @@ func TestFlagWithTimeoutExceeded(t *testing.T) {
 
 	require.NoError(t, err)
 	fmt.Println(variants)
-	require.EqualValues(t, map[string]interface{}{"simple-flag": true, "group-flag": true}, variants)
+	require.EqualValues(t, map[string]any{"simple-flag": true, "group-flag": true}, variants)
 }
 
 func TestFlagDefinitionsWithTimeoutExceeded(t *testing.T) {
@@ -4437,16 +4437,16 @@ func TestFlagDefinitionsWithTimeoutExceeded(t *testing.T) {
 
 func TestFetchFlagsFails(t *testing.T) {
 	// This test verifies that even in presence of HTTP errors flags continue to be fetched.
-	var called uint32
+	var called atomic.Uint32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if atomic.LoadUint32(&called) == 0 {
+		if called.Load() == 0 {
 			// Load initial flags successfully
 			w.Write([]byte(fixture("feature_flag/test-simple-flag.json")))
 		} else {
 			// Fail all next requests
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		atomic.AddUint32(&called, 1)
+		called.Add(1)
 
 	}))
 	defer server.Close()
@@ -4475,7 +4475,7 @@ func TestFetchFlagsFails(t *testing.T) {
 	<-time.After(50 * time.Millisecond)
 
 	const expectedCalls = 3
-	actualCalls := atomic.LoadUint32(&called)
+	actualCalls := called.Load()
 	if actualCalls != expectedCalls {
 		t.Error("Expected to be called", expectedCalls, "times but got", actualCalls)
 	}

@@ -10,23 +10,23 @@ type Logger interface {
 	// Debugf is called by the Insights client to log debug messages about the
 	// operations it performs. Messages logged by this method are usually
 	// tagged with a `DEBUG` log level in common logging libraries.
-	Debugf(format string, args ...interface{})
+	Debugf(format string, args ...any)
 
 	// Logf is called by the Insights client to log regular messages about the
 	// operations it performs. Messages logged by this method are usually
 	// tagged with an `INFO` log level in common logging libraries.
-	Logf(format string, args ...interface{})
+	Logf(format string, args ...any)
 
 	// Warnf is called by the Insights client to log warning messages about
 	// the operations it performs. Messages logged by this method are usually
 	// tagged with a `WARN` log level in common logging libraries.
-	Warnf(format string, args ...interface{})
+	Warnf(format string, args ...any)
 
 	// Errorf is called by the Insights client to log errors encountered
 	// while sending events to the backend servers.
 	// Messages logged by this method are usually tagged with an `ERROR` log
 	// level in common logging libraries.
-	Errorf(format string, args ...interface{})
+	Errorf(format string, args ...any)
 }
 
 // StdLogger creates an object that satisfies the insights.Logger
@@ -43,21 +43,21 @@ type stdLogger struct {
 	verbose bool
 }
 
-func (l stdLogger) Debugf(format string, args ...interface{}) {
+func (l stdLogger) Debugf(format string, args ...any) {
 	if l.verbose {
 		l.logger.Printf("DEBUG: "+format, args...)
 	}
 }
 
-func (l stdLogger) Logf(format string, args ...interface{}) {
+func (l stdLogger) Logf(format string, args ...any) {
 	l.logger.Printf("INFO: "+format, args...)
 }
 
-func (l stdLogger) Warnf(format string, args ...interface{}) {
+func (l stdLogger) Warnf(format string, args ...any) {
 	l.logger.Printf("WARN: "+format, args...)
 }
 
-func (l stdLogger) Errorf(format string, args ...interface{}) {
+func (l stdLogger) Errorf(format string, args ...any) {
 	l.logger.Printf("ERROR: "+format, args...)
 }
 

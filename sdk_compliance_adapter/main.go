@@ -119,21 +119,21 @@ type InitRequest struct {
 
 // CaptureRequest represents /capture endpoint request
 type CaptureRequest struct {
-	DistinctID string                 `json:"distinct_id"`
-	Event      string                 `json:"event"`
-	Properties map[string]interface{} `json:"properties,omitempty"`
-	Timestamp  *string                `json:"timestamp,omitempty"`
+	DistinctID string         `json:"distinct_id"`
+	Event      string         `json:"event"`
+	Properties map[string]any `json:"properties,omitempty"`
+	Timestamp  *string        `json:"timestamp,omitempty"`
 }
 
 // FeatureFlagRequest represents /get_feature_flag endpoint request
 type FeatureFlagRequest struct {
-	Key              string                            `json:"key"`
-	DistinctID       string                            `json:"distinct_id"`
-	PersonProperties map[string]interface{}            `json:"person_properties,omitempty"`
-	Groups           map[string]interface{}            `json:"groups,omitempty"`
-	GroupProperties  map[string]map[string]interface{} `json:"group_properties,omitempty"`
-	DisableGeoIP     *bool                             `json:"disable_geoip,omitempty"`
-	ForceRemote      *bool                             `json:"force_remote,omitempty"`
+	Key              string                    `json:"key"`
+	DistinctID       string                    `json:"distinct_id"`
+	PersonProperties map[string]any            `json:"person_properties,omitempty"`
+	Groups           map[string]any            `json:"groups,omitempty"`
+	GroupProperties  map[string]map[string]any `json:"group_properties,omitempty"`
+	DisableGeoIP     *bool                     `json:"disable_geoip,omitempty"`
+	ForceRemote      *bool                     `json:"force_remote,omitempty"`
 }
 
 // StateResponse represents /state endpoint response
@@ -146,7 +146,7 @@ type StateResponse struct {
 	RequestsMade        []RequestInfo `json:"requests_made"`
 }
 
-func jsonResponse(w http.ResponseWriter, data interface{}) {
+func jsonResponse(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
@@ -265,7 +265,7 @@ func captureHandler(w http.ResponseWriter, r *http.Request) {
 	state.mu.Unlock()
 
 	// TODO: Get actual UUID from SDK
-	jsonResponse(w, map[string]interface{}{
+	jsonResponse(w, map[string]any{
 		"success": true,
 		"uuid":    "generated-uuid",
 	})
@@ -295,7 +295,7 @@ func flushHandler(w http.ResponseWriter, r *http.Request) {
 	eventsFlushed := state.totalEventsSent
 	state.mu.Unlock()
 
-	jsonResponse(w, map[string]interface{}{
+	jsonResponse(w, map[string]any{
 		"success":        true,
 		"events_flushed": eventsFlushed,
 	})
@@ -401,7 +401,7 @@ func featureFlagHandler(w http.ResponseWriter, r *http.Request) {
 	// Avoid logging user-controlled fields (req.Key, req.DistinctID, value) to prevent log injection.
 	log.Printf("Evaluated feature flag")
 
-	jsonResponse(w, map[string]interface{}{
+	jsonResponse(w, map[string]any{
 		"success": true,
 		"value":   value,
 	})

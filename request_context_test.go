@@ -483,17 +483,17 @@ func (panickingEnqueueClient) EnqueueWithContext(context.Context, Message) error
 	panic("enqueue with context panic")
 }
 
-func readSingleBatchEvent(t *testing.T, body <-chan []byte) map[string]interface{} {
+func readSingleBatchEvent(t *testing.T, body <-chan []byte) map[string]any {
 	t.Helper()
 
 	select {
 	case payload := <-body:
-		var decoded map[string]interface{}
+		var decoded map[string]any
 		require.NoError(t, json.Unmarshal(payload, &decoded))
-		batch, ok := decoded["batch"].([]interface{})
+		batch, ok := decoded["batch"].([]any)
 		require.True(t, ok)
 		require.Len(t, batch, 1)
-		event, ok := batch[0].(map[string]interface{})
+		event, ok := batch[0].(map[string]any)
 		require.True(t, ok)
 		return event
 	case <-time.After(2 * time.Second):
@@ -502,26 +502,26 @@ func readSingleBatchEvent(t *testing.T, body <-chan []byte) map[string]interface
 	}
 }
 
-func requireProperties(t *testing.T, event map[string]interface{}) map[string]interface{} {
+func requireProperties(t *testing.T, event map[string]any) map[string]any {
 	t.Helper()
-	properties, ok := event["properties"].(map[string]interface{})
+	properties, ok := event["properties"].(map[string]any)
 	require.True(t, ok)
 	return properties
 }
 
-func requireExceptionStackContainsFunction(t *testing.T, properties map[string]interface{}, functionName string) {
+func requireExceptionStackContainsFunction(t *testing.T, properties map[string]any, functionName string) {
 	t.Helper()
-	exceptionList, ok := properties["$exception_list"].([]interface{})
+	exceptionList, ok := properties["$exception_list"].([]any)
 	require.True(t, ok)
 	require.NotEmpty(t, exceptionList)
-	exceptionItem, ok := exceptionList[0].(map[string]interface{})
+	exceptionItem, ok := exceptionList[0].(map[string]any)
 	require.True(t, ok)
-	stacktrace, ok := exceptionItem["stacktrace"].(map[string]interface{})
+	stacktrace, ok := exceptionItem["stacktrace"].(map[string]any)
 	require.True(t, ok)
-	frames, ok := stacktrace["frames"].([]interface{})
+	frames, ok := stacktrace["frames"].([]any)
 	require.True(t, ok)
 	for _, rawFrame := range frames {
-		frame, ok := rawFrame.(map[string]interface{})
+		frame, ok := rawFrame.(map[string]any)
 		require.True(t, ok)
 		function, _ := frame["function"].(string)
 		if strings.Contains(function, functionName) {

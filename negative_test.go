@@ -157,7 +157,7 @@ func TestClient_NetworkFailures(t *testing.T) {
 	t.Run("connection_refused", func(t *testing.T) {
 		client, _ := NewWithConfig("test-key", Config{
 			Endpoint:   "http://localhost:1", // Port 1 should refuse connections
-			MaxRetries: Ptr(0),               // Skip retries to avoid timeout
+			MaxRetries: new(0),               // Skip retries to avoid timeout
 		})
 
 		err := client.Enqueue(Capture{
@@ -174,7 +174,7 @@ func TestClient_NetworkFailures(t *testing.T) {
 	t.Run("invalid_url", func(t *testing.T) {
 		client, _ := NewWithConfig("test-key", Config{
 			Endpoint:   "not-a-valid-url",
-			MaxRetries: Ptr(0), // Skip retries to avoid timeout
+			MaxRetries: new(0), // Skip retries to avoid timeout
 		})
 
 		err := client.Enqueue(Capture{
@@ -225,16 +225,16 @@ func TestProperties_EdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		// Should be valid JSON that can be unmarshaled
-		var decoded map[string]interface{}
+		var decoded map[string]any
 		err = json.Unmarshal(data, &decoded)
 		require.NoError(t, err)
 	})
 
 	t.Run("deeply_nested", func(t *testing.T) {
-		nested := map[string]interface{}{}
+		nested := map[string]any{}
 		current := nested
-		for i := 0; i < 100; i++ {
-			next := map[string]interface{}{}
+		for range 100 {
+			next := map[string]any{}
 			current["nested"] = next
 			current = next
 		}
@@ -249,8 +249,8 @@ func TestProperties_EdgeCases(t *testing.T) {
 		// Properties using map[string]interface{} can't have circular refs
 		// but we can test that large recursive structures work
 		props := Properties{
-			"a": map[string]interface{}{
-				"b": map[string]interface{}{
+			"a": map[string]any{
+				"b": map[string]any{
 					"c": "value",
 				},
 			},
@@ -391,7 +391,7 @@ func TestBatch_EmptyAndLarge(t *testing.T) {
 		})
 
 		// Send more than default batch size
-		for i := 0; i < 500; i++ {
+		for i := range 500 {
 			client.Enqueue(Capture{
 				DistinctId: "user_1",
 				Event:      "test_event",
@@ -541,7 +541,7 @@ func TestGroups_EdgeCases(t *testing.T) {
 
 	t.Run("many_groups", func(t *testing.T) {
 		groups := Groups{}
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			groups[string(rune('a'+i%26))+string(rune('0'+i/26))] = "value"
 		}
 		_, err := json.Marshal(groups)

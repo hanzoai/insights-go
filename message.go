@@ -71,7 +71,7 @@ type batch struct {
 }
 
 // APIMessage is a wire-format message produced by Message.APIfy and passed to callbacks.
-type APIMessage interface{}
+type APIMessage any
 
 // prepareForSend creates the API message and serializes it to JSON.
 // Returns pre-serialized JSON for efficient batch building, the original

@@ -85,8 +85,8 @@ func TestException_Validate(t *testing.T) {
 						Type:  "MyError",
 						Value: "something went wrong",
 						Mechanism: &ExceptionMechanism{
-							Handled:   ptrBool(true),
-							Synthetic: ptrBool(false),
+							Handled:   new(true),
+							Synthetic: new(false),
 						},
 						Stacktrace: &ExceptionStacktrace{
 							Type: "raw",
@@ -126,12 +126,12 @@ func TestException_APIfy_WithCustomProperties(t *testing.T) {
 
 	tests := map[string]struct {
 		exception       Exception
-		expectKeys      map[string]interface{}
+		expectKeys      map[string]any
 		forbiddenValues []string
 	}{
 		"basic without custom properties": {
 			exception: Exception{DistinctId: "user-123", Timestamp: now, ExceptionList: exList},
-			expectKeys: map[string]interface{}{
+			expectKeys: map[string]any{
 				"$lib":         SDKName,
 				"$lib_version": getVersion(),
 				"distinct_id":  "user-123",
@@ -145,7 +145,7 @@ func TestException_APIfy_WithCustomProperties(t *testing.T) {
 				Properties:           NewProperties().Set("environment", "production").Set("retry_count", 3),
 				ExceptionList:        exList,
 			},
-			expectKeys: map[string]interface{}{
+			expectKeys: map[string]any{
 				"$lib":                   SDKName,
 				"$lib_version":           getVersion(),
 				"distinct_id":            "user-123",
@@ -161,7 +161,7 @@ func TestException_APIfy_WithCustomProperties(t *testing.T) {
 				Properties:    NewProperties().Set("$lib", "custom-lib").Set("distinct_id", "custom-id"),
 				ExceptionList: exList,
 			},
-			expectKeys: map[string]interface{}{
+			expectKeys: map[string]any{
 				"$lib":        SDKName,
 				"distinct_id": "user-123",
 			},
@@ -181,12 +181,12 @@ func TestException_APIfy_WithCustomProperties(t *testing.T) {
 				t.Fatalf("marshal failed: %v", err)
 			}
 
-			var wire map[string]interface{}
+			var wire map[string]any
 			if err := json.Unmarshal(jsonBytes, &wire); err != nil {
 				t.Fatalf("unmarshal failed: %v", err)
 			}
 
-			props, ok := wire["properties"].(map[string]interface{})
+			props, ok := wire["properties"].(map[string]any)
 			if !ok {
 				t.Fatalf("properties field missing or wrong type")
 			}
@@ -226,20 +226,20 @@ func TestException_JSONSerialization(t *testing.T) {
 		t.Fatalf("marshal failed: %v", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(jsonBytes, &result); err != nil {
 		t.Fatalf("unmarshal failed: %v", err)
 	}
 
-	props, ok := result["properties"].(map[string]interface{})
+	props, ok := result["properties"].(map[string]any)
 	if !ok {
 		t.Fatalf("properties field missing or wrong type")
 	}
 
 	tests := []struct {
-		obj      map[string]interface{}
+		obj      map[string]any
 		field    string
-		expected interface{}
+		expected any
 	}{
 		{result, "type", "exception"},
 		{result, "uuid", "01963f1a-3c12-7b21-8a1d-3f6d1cf49b8e"},
@@ -261,7 +261,7 @@ func TestException_JSONSerialization(t *testing.T) {
 		}
 	}
 
-	exList, ok := props["$exception_list"].([]interface{})
+	exList, ok := props["$exception_list"].([]any)
 	if !ok {
 		t.Errorf("$exception_list: expected []interface{}, got %T", props["$exception_list"])
 	}

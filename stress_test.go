@@ -52,18 +52,12 @@ func TestStress_EndToEndThroughput(t *testing.T) {
 					eventsPerGoroutine = 1
 				}
 
-				actualConcurrency := concurrency
-				if actualConcurrency > eventCount {
-					actualConcurrency = eventCount
-				}
+				actualConcurrency := min(concurrency, eventCount)
 
 				for g := 0; g < actualConcurrency && g*eventsPerGoroutine < eventCount; g++ {
 					wg.Add(1)
 					startIdx := g * eventsPerGoroutine
-					endIdx := (g + 1) * eventsPerGoroutine
-					if endIdx > eventCount {
-						endIdx = eventCount
-					}
+					endIdx := min((g+1)*eventsPerGoroutine, eventCount)
 					// Handle remainder for last goroutine
 					if g == actualConcurrency-1 {
 						endIdx = eventCount
@@ -105,10 +99,7 @@ func TestStress_BatchSizeBoundaries(t *testing.T) {
 	for _, batchSize := range batchSizes {
 		t.Run(fmt.Sprintf("batch_%d", batchSize), func(t *testing.T) {
 			// Use enough events to force multiple batches (at least 3x batch size, minimum 300)
-			eventCount := batchSize * 3
-			if eventCount < 300 {
-				eventCount = 300
-			}
+			eventCount := max(batchSize*3, 300)
 			pool := NewEventPoolWithCardinalityDistribution(eventCount)
 
 			var batchesReceived atomic.Int64
@@ -135,10 +126,7 @@ func TestStress_BatchSizeBoundaries(t *testing.T) {
 
 			expectedBatches := (eventCount + batchSize - 1) / batchSize
 			// Allow for some variance due to byte-based batching
-			minExpected := expectedBatches / 2
-			if minExpected < 2 {
-				minExpected = 2
-			}
+			minExpected := max(expectedBatches/2, 2)
 			if batchesReceived.Load() < int64(minExpected) {
 				t.Errorf("Expected at least %d batches (ideal: %d), got %d",
 					minExpected, expectedBatches, batchesReceived.Load())
@@ -198,7 +186,7 @@ func TestStress_CardinalityDistribution(t *testing.T) {
 			var wg sync.WaitGroup
 			var errorCount atomic.Int64
 			eventsPerGoroutine := eventCount / concurrency
-			for g := 0; g < concurrency; g++ {
+			for g := range concurrency {
 				wg.Add(1)
 				startIdx := g * eventsPerGoroutine
 				endIdx := (g + 1) * eventsPerGoroutine
@@ -260,11 +248,11 @@ func TestStress_HighConcurrencyLowVolume(t *testing.T) {
 
 	var wg sync.WaitGroup
 	var errorCount atomic.Int64
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			for i := 0; i < eventsPerGoroutine; i++ {
+			for i := range eventsPerGoroutine {
 				idx := goroutineID*eventsPerGoroutine + i
 				if err := client.Enqueue(pool.Get(idx)); err != nil {
 					errorCount.Add(1)
@@ -315,11 +303,11 @@ func TestStress_LowConcurrencyHighVolume(t *testing.T) {
 
 	var wg sync.WaitGroup
 	var errorCount atomic.Int64
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			for i := 0; i < eventsPerGoroutine; i++ {
+			for i := range eventsPerGoroutine {
 				idx := goroutineID*eventsPerGoroutine + i
 				if err := client.Enqueue(pool.Get(idx)); err != nil {
 					errorCount.Add(1)
@@ -374,7 +362,7 @@ func TestStress_MixedCardinality(t *testing.T) {
 	var wg sync.WaitGroup
 	var errorCount atomic.Int64
 	eventsPerGoroutine := eventCount / concurrency
-	for g := 0; g < concurrency; g++ {
+	for g := range concurrency {
 		wg.Add(1)
 		startIdx := g * eventsPerGoroutine
 		endIdx := (g + 1) * eventsPerGoroutine
@@ -428,7 +416,7 @@ func TestStress_RapidCloseReopen(t *testing.T) {
 	defer server.Close()
 
 	var totalErrors int
-	for i := 0; i < iterations; i++ {
+	for i := range iterations {
 		client, err := NewWithConfig("test-key", Config{
 			Endpoint:  server.URL,
 			BatchSize: 25,
@@ -436,7 +424,7 @@ func TestStress_RapidCloseReopen(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		for j := 0; j < eventsPerIteration; j++ {
+		for j := range eventsPerIteration {
 			idx := i*eventsPerIteration + j
 			if err := client.Enqueue(pool.Get(idx)); err != nil {
 				totalErrors++
@@ -466,11 +454,9 @@ func TestStress_PrepareForSendUnderLoad(t *testing.T) {
 			errorCount := atomic.Int64{}
 
 			// Concurrent prepareForSend
-			for g := 0; g < 10; g++ {
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					for i := 0; i < 100; i++ {
+			for range 10 {
+				wg.Go(func() {
+					for i := range 100 {
 						capture := pool.Get(i)
 						capture.Type = "capture"
 						data, apiMsg, err := prepareForSend(capture)
@@ -484,7 +470,7 @@ func TestStress_PrepareForSendUnderLoad(t *testing.T) {
 							errorCount.Add(1)
 						}
 					}
-				}()
+				})
 			}
 
 			wg.Wait()

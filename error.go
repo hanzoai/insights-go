@@ -16,7 +16,7 @@ type ConfigError struct {
 	Field string
 
 	// The value of the configuration field that caused the error.
-	Value interface{}
+	Value any
 }
 
 // Error returns a human-readable configuration error message.
@@ -35,7 +35,7 @@ type FieldError struct {
 	Name string
 
 	// The value of the field that wasn't properly initialized.
-	Value interface{}
+	Value any
 }
 
 // Error returns a human-readable field validation error message.

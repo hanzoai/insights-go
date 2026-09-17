@@ -76,7 +76,7 @@ func TestIsFeatureEnabled(projectAPIKey, personalAPIKey, endpoint string) {
 
 	// Encrypted remote config flag (json object payload)
 	jsonObjectPayloadResult, _ := client.GetRemoteConfigPayload("my_secret_flag_json_object_value")
-	var jsonPayloadMap map[string]interface{}
+	var jsonPayloadMap map[string]any
 	json.Unmarshal([]byte(jsonObjectPayloadResult), &jsonPayloadMap)
 
 	// Encrypted remote config flag (json array payload)

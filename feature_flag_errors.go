@@ -68,7 +68,7 @@ func NewAPIError(statusCode int, message string) *APIError {
 // featureFlagEvaluationResult holds internal evaluation context
 // along with any error information that occurred during evaluation.
 type featureFlagEvaluationResult struct {
-	Value                     interface{}
+	Value                     any
 	Err                       error
 	ErrorsWhileComputingFlags bool
 	QuotaLimited              bool
@@ -94,8 +94,7 @@ func classifyError(err error) string {
 	}
 
 	// Check API errors first (application-level errors with status codes)
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return fmt.Sprintf("%s%d", FeatureFlagErrorAPIErrorPrefix, apiErr.StatusCode)
 	}
 
@@ -113,8 +112,7 @@ func classifyError(err error) string {
 	}
 
 	// Check net.Error interface
-	var netErr net.Error
-	if errors.As(err, &netErr) {
+	if netErr, ok := errors.AsType[net.Error](err); ok {
 		if netErr.Timeout() {
 			return FeatureFlagErrorTimeout
 		}
@@ -122,13 +120,11 @@ func classifyError(err error) string {
 	}
 
 	// Check specific network error types
-	var dnsErr *net.DNSError
-	if errors.As(err, &dnsErr) {
+	if _, ok := errors.AsType[*net.DNSError](err); ok {
 		return FeatureFlagErrorConnectionError
 	}
 
-	var opErr *net.OpError
-	if errors.As(err, &opErr) {
+	if _, ok := errors.AsType[*net.OpError](err); ok {
 		return FeatureFlagErrorConnectionError
 	}
 

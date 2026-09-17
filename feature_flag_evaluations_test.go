@@ -68,10 +68,10 @@ type captureLogger struct {
 	warnings []string
 }
 
-func (l *captureLogger) Debugf(string, ...interface{}) {}
-func (l *captureLogger) Logf(string, ...interface{})   {}
-func (l *captureLogger) Errorf(string, ...interface{}) {}
-func (l *captureLogger) Warnf(format string, args ...interface{}) {
+func (l *captureLogger) Debugf(string, ...any) {}
+func (l *captureLogger) Logf(string, ...any)   {}
+func (l *captureLogger) Errorf(string, ...any) {}
+func (l *captureLogger) Warnf(format string, args ...any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.warnings = append(l.warnings, formatLog(format, args...))
@@ -86,7 +86,7 @@ func (l *captureLogger) snapshot() []string {
 }
 
 // formatLog mimics fmt.Sprintf without pulling fmt into the test body.
-func formatLog(format string, args ...interface{}) string {
+func formatLog(format string, args ...any) string {
 	if len(args) == 0 {
 		return format
 	}
@@ -659,10 +659,10 @@ func TestEvaluateFlags_LocalEvaluation_TagsLocallyEvaluated(t *testing.T) {
 // FeatureFlagEvaluations filter-helper warnings can pass one as Config.Logger.
 type silentLogger struct{}
 
-func (silentLogger) Debugf(string, ...interface{}) {}
-func (silentLogger) Logf(string, ...interface{})   {}
-func (silentLogger) Warnf(string, ...interface{})  {}
-func (silentLogger) Errorf(string, ...interface{}) {}
+func (silentLogger) Debugf(string, ...any) {}
+func (silentLogger) Logf(string, ...any)   {}
+func (silentLogger) Warnf(string, ...any)  {}
+func (silentLogger) Errorf(string, ...any) {}
 
 func TestFilterWarnings_SilencedByQuietLogger(t *testing.T) {
 	t.Parallel()
@@ -790,7 +790,6 @@ func TestCaptureFlagCalled_DedupesAcrossSameGroupContext(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			fs := newFlagsServer(t, "test-flags-v4.json")

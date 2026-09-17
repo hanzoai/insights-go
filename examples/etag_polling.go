@@ -18,7 +18,7 @@ const etagPollInterval = 5 * time.Second
 // loggingTransport wraps an http.RoundTripper to log ETag-related headers
 type loggingTransport struct {
 	wrapped      http.RoundTripper
-	requestCount int64
+	requestCount atomic.Int64
 }
 
 func (t *loggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -27,7 +27,7 @@ func (t *loggingTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 		return t.wrapped.RoundTrip(req)
 	}
 
-	reqNum := atomic.AddInt64(&t.requestCount, 1)
+	reqNum := t.requestCount.Add(1)
 	timestamp := time.Now().Format(time.RFC3339)
 
 	ifNoneMatch := req.Header.Get("If-None-Match")

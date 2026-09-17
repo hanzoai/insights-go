@@ -53,19 +53,19 @@ func TestConfig_MaxRetries(t *testing.T) {
 	got := makeConfig(c)
 	require.Equal(t, 10, got.maxAttempts)
 
-	c.MaxRetries = Ptr[int](-1)
+	c.MaxRetries = new(-1)
 	require.ErrorContains(t, c.Validate(),
 		"insights.NewWithConfig: max retries out of range [0,9] (insights.Config.MaxRetries: -1)")
 	got = makeConfig(c)
 	require.Equal(t, 10, got.maxAttempts)
 
-	c.MaxRetries = Ptr[int](10)
+	c.MaxRetries = new(10)
 	require.ErrorContains(t, c.Validate(),
 		"insights.NewWithConfig: max retries out of range [0,9] (insights.Config.MaxRetries: 10)")
 	got = makeConfig(c)
 	require.Equal(t, 10, got.maxAttempts)
 
-	c.MaxRetries = Ptr[int](5)
+	c.MaxRetries = new(5)
 	require.NoError(t, c.Validate())
 	got = makeConfig(c)
 	require.Equal(t, 6, got.maxAttempts)

@@ -221,7 +221,7 @@ func BenchmarkFeatureFlagLocalEvaluation(b *testing.B) {
 	defer client.Close()
 
 	// Pre-warm cache - wait for flags to load
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		result, _ := client.GetFeatureFlag(FeatureFlagPayload{Key: "simpleFlag", DistinctId: "warmup"})
 		if result != nil {
 			break
@@ -481,7 +481,7 @@ func BenchmarkCompressionOverhead(b *testing.B) {
 					Endpoint:    server.URL,
 					Compression: cm.mode,
 					Callback:    callback,
-					MaxRetries:  Ptr(0),       // Disable retries to avoid noise during cleanup
+					MaxRetries:  new(0),       // Disable retries to avoid noise during cleanup
 					Logger:      testLogger{}, // Suppress log output in benchmarks
 				})
 				if err != nil {
@@ -531,7 +531,7 @@ func BenchmarkEndToEndWithCompression(b *testing.B) {
 				Endpoint:    server.URL,
 				Compression: cm.mode,
 				Callback:    callback,
-				MaxRetries:  Ptr(0),       // Disable retries to avoid noise during cleanup
+				MaxRetries:  new(0),       // Disable retries to avoid noise during cleanup
 				Logger:      testLogger{}, // Suppress log output in benchmarks
 			})
 			if err != nil {
@@ -598,7 +598,7 @@ func BenchmarkCompressionRatio(b *testing.B) {
 				Compression: CompressionNone,
 				BatchSize:   50,
 				Callback:    callbackUncompressed,
-				MaxRetries:  Ptr(0),       // Disable retries to avoid noise during cleanup
+				MaxRetries:  new(0),       // Disable retries to avoid noise during cleanup
 				Logger:      testLogger{}, // Suppress log output in benchmarks
 			})
 			if err != nil {
@@ -610,7 +610,7 @@ func BenchmarkCompressionRatio(b *testing.B) {
 				Compression: CompressionGzip,
 				BatchSize:   50,
 				Callback:    callbackCompressed,
-				MaxRetries:  Ptr(0),       // Disable retries to avoid noise during cleanup
+				MaxRetries:  new(0),       // Disable retries to avoid noise during cleanup
 				Logger:      testLogger{}, // Suppress log output in benchmarks
 			})
 			if err != nil {

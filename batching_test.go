@@ -41,7 +41,7 @@ func TestBatching_SmallEventsBatchTogether(t *testing.T) {
 
 	// Send 50 small events - should all fit in one batch
 	pool := NewEventPoolWithCardinality(50, CardinalityLow)
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		err := client.Enqueue(pool.Next())
 		require.NoError(t, err)
 	}
@@ -83,7 +83,7 @@ func TestBatching_LargeEventsTriggerFlush(t *testing.T) {
 
 	// Send 10 medium-high cardinality events
 	pool := NewEventPoolWithCardinality(10, CardinalityMedium)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		err := client.Enqueue(pool.Next())
 		require.NoError(t, err)
 	}
@@ -123,7 +123,7 @@ func TestBatching_OversizedEventRejected(t *testing.T) {
 	// Create an event with MANY properties to exceed 500KB
 	// Each property is ~50 bytes, need ~10000 properties to hit 500KB
 	oversizedProps := make(Properties, 15000)
-	for i := 0; i < 15000; i++ {
+	for i := range 15000 {
 		oversizedProps[generateDistinctId(i)] = generateDistinctId(i + 100000)
 	}
 
@@ -169,7 +169,7 @@ func TestBatching_MixedCardinalityBatching(t *testing.T) {
 	mediumPool := NewEventPoolWithCardinality(20, CardinalityMedium)
 
 	// Interleave small and medium events
-	for i := 0; i < 30; i++ {
+	for i := range 30 {
 		err := client.Enqueue(smallPool.Next())
 		require.NoError(t, err)
 		if i < 20 {
@@ -212,7 +212,7 @@ func TestBatching_BatchCountLimit(t *testing.T) {
 	// Send 25 small events with BatchSize=10 and short interval
 	// The batch count limit should trigger before interval flush
 	pool := NewEventPoolWithCardinality(25, CardinalityLow)
-	for i := 0; i < 25; i++ {
+	for range 25 {
 		err := client.Enqueue(pool.Next())
 		require.NoError(t, err)
 	}
@@ -296,7 +296,7 @@ func TestBatchSubmitTimeout_WaitsForWorkers(t *testing.T) {
 	require.NoError(t, err)
 
 	// Send 20 events - will exceed queue buffer (10), so some must wait
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		client.Enqueue(Capture{
 			DistinctId: "test-user",
 			Event:      "test-event",
@@ -356,7 +356,7 @@ func TestBatchSubmitTimeout_NonBlocking(t *testing.T) {
 	// Blast events as fast as possible - no sleep between enqueues.
 	// This ensures the channel fills faster than processBatch goroutines can drain it,
 	// causing the non-blocking send to drop events when the queue is full.
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		client.Enqueue(Capture{
 			DistinctId: "test-user",
 			Event:      "test-event",
@@ -403,7 +403,7 @@ func TestShutdownTimeout_DefaultWaitsForCompletion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Send events
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		err := client.Enqueue(Capture{
 			DistinctId: "test-user",
 			Event:      "test-event",
@@ -460,7 +460,7 @@ func TestShutdownTimeout_AbortsAfterTimeout(t *testing.T) {
 	require.NoError(t, err)
 
 	// Send events
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		err := client.Enqueue(Capture{
 			DistinctId: "test-user",
 			Event:      "test-event",
@@ -513,7 +513,7 @@ func TestCloseWithContext_RespectsDeadline(t *testing.T) {
 	require.NoError(t, err)
 
 	// Send events
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		err := client.Enqueue(Capture{
 			DistinctId: "test-user",
 			Event:      "test-event",
